@@ -8,6 +8,6 @@ export const RECOVERY_MACRO = {
   "ISSUES_EXPLAINER": "https://github.com/anthropics/claude-code/issues",
   "NATIVE_PACKAGE_URL": "",
   "PACKAGE_URL": "https://github.com/anthropics/claude-code",
-  "VERSION": "1.0.0",
+  "VERSION": "1.0.1",
   "VERSION_CHANGELOG": "https://github.com/anthropics/claude-code/releases"
 };

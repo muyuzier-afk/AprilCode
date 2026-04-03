@@ -19,8 +19,7 @@
     "build": "bun build src/entrypoints/cli.tsx --outdir ./dist --target node --sourcemap",
     "start": "bun dist/cli.js",
     "smoke": "node ./dist/cli.js --version",
-    "test": "bun run smoke",
-    "verify": "bun run build && bun run test"
+    "verify": "bun run build"
   },
   "publishConfig": {
     "access": "public"

@@ -99,24 +99,6 @@ bun run build
 bun run smoke
 ```
 
-## CI/CD
-
-GitHub Actions is configured in [`.github/workflows/ci-cd.yml`](./.github/workflows/ci-cd.yml).
-
-- Pull requests and pushes to `main` run a clean build
-- Successful pushes to `main` can publish to npm automatically
-- npm publishing is skipped when the current version already exists
-
-Required repository secret:
-
-- `NPM_TOKEN`
-
-## Roadmap
-
-- Harden provider compatibility across more OpenAI-like backends
-- Continue replacing legacy Claude-specific surface area
-- Expand build validation beyond the current release build gate
-
 ## License
 
 MIT. See [LICENSE](./LICENSE).

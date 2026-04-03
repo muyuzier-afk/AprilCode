@@ -1360,6 +1360,10 @@ export function enableConfigs(): void {
   })
 }
 
+export function isConfigReadingAllowed(): boolean {
+  return configReadingAllowed
+}
+
 /**
  * Returns the directory where config backup files are stored.
  * Uses ~/.april/backups/ to keep the home directory clean.

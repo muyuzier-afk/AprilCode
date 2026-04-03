@@ -1,5 +1,9 @@
 import { getAnthropicApiKey, removeApiKey, saveApiKey } from './auth.js'
-import { getGlobalConfig, saveGlobalConfig } from './config.js'
+import {
+  getGlobalConfig,
+  isConfigReadingAllowed,
+  saveGlobalConfig,
+} from './config.js'
 import { getSecureStorage } from './secureStorage/index.js'
 import type { SecureStorageData } from './secureStorage/types.js'
 
@@ -42,6 +46,10 @@ function normalizeBaseUrl(baseUrl: string): string {
 }
 
 function readConfigEnv(key: string): string | undefined {
+  if (!isConfigReadingAllowed()) {
+    return undefined
+  }
+
   const value = getGlobalConfig().env[key]
   return value && value.trim() ? value : undefined
 }
@@ -160,6 +168,11 @@ function readStoredProviderConfigRaw(): StoredProviderConfig | undefined {
   return getSecureStorage().read()?.providerConfig
 }
 
+function readStoredPrimaryApiKey(): string | undefined {
+  const apiKey = getSecureStorage().read()?.primaryApiKey
+  return apiKey?.trim() ? apiKey : undefined
+}
+
 function readStoredProviderConfig(): {
   baseUrl?: string
   model?: string
@@ -252,6 +265,13 @@ function migrateLegacyAprilConfig(): void {
   if (hasMigratedLegacyAprilConfig) {
     return
   }
+
+  hydrateRuntimeConfigFromSecureStorage()
+
+  if (!isConfigReadingAllowed()) {
+    return
+  }
+
   hasMigratedLegacyAprilConfig = true
 
   const legacyBaseUrl =
@@ -292,7 +312,6 @@ function migrateLegacyAprilConfig(): void {
             apiFormat: nextApiFormat,
           })
         } catch {
-          hydrateRuntimeConfigFromSecureStorage()
           return
         }
       }
@@ -300,8 +319,6 @@ function migrateLegacyAprilConfig(): void {
 
     clearLegacyConfigEnv()
   }
-
-  hydrateRuntimeConfigFromSecureStorage()
 }
 
 function getStoredOrLegacyBaseUrl(): string | undefined {
@@ -379,12 +396,16 @@ export function getAprilApiFormatLabel(
 export function getAprilApiConfig(): AprilApiConfig {
   migrateLegacyAprilConfig()
 
+  const envApiKey =
+    process.env.APRIL_API_KEY || process.env.ANTHROPIC_API_KEY || undefined
+  const storedApiKey = readStoredPrimaryApiKey()
+  const apiKey =
+    envApiKey ||
+    storedApiKey ||
+    (isConfigReadingAllowed() ? getAnthropicApiKey() || undefined : undefined)
+
   return {
-    apiKey:
-      process.env.APRIL_API_KEY ||
-      process.env.ANTHROPIC_API_KEY ||
-      getAnthropicApiKey() ||
-      undefined,
+    apiKey,
     baseUrl: getAprilBaseUrl(),
     model: getAprilModel(),
     apiFormat: getAprilApiFormat(),

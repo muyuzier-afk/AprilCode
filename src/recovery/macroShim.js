@@ -5,9 +5,9 @@
 export const RECOVERY_MACRO = {
   "BUILD_TIME": "2026-03-31T09:28:16.558Z",
   "FEEDBACK_CHANNEL": "github",
-  "ISSUES_EXPLAINER": "https://github.com/anthropics/claude-code/issues",
+  "ISSUES_EXPLAINER": "https://github.com/muyuzier-afk/AprilCode/issues",
   "NATIVE_PACKAGE_URL": "",
-  "PACKAGE_URL": "https://github.com/anthropics/claude-code",
-  "VERSION": "1.0.4",
-  "VERSION_CHANGELOG": "https://github.com/anthropics/claude-code/releases"
+  "PACKAGE_URL": "https://github.com/muyuzier-afk/AprilCode",
+  "VERSION": "1.0.5",
+  "VERSION_CHANGELOG": "https://github.com/muyuzier-afk/AprilCode/releases"
 };

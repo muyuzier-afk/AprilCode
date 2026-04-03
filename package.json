@@ -2,9 +2,10 @@
   "name": "@april-ai/april-code",
   "version": "1.0.1",
   "bin": {
-    "april": "dist/cli.js"
+    "april": "bin/april.js"
   },
   "files": [
+    "bin/april.js",
     "dist/cli.js"
   ],
   "engines": {

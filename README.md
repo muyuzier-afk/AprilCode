@@ -19,6 +19,30 @@
 
 April Code is a terminal-first coding agent for teams that want an OpenAI-compatible workflow without Anthropic-specific onboarding, telemetry, or credential storage defaults. It provides a Claude Code style CLI experience with April-specific branding, secure local configuration, and provider flexibility.
 
+### ClaudeaCode Private MCP/NAPI Compatibility Layer Progress
+
+Below is the current status of compatibility layers related to Claude's private MCP and native/NAPI alternative implementations in the restored version. The distinction here is between **import/build readiness** and **whether runtime capabilities are actually restored**:
+
+> **Special note:** This project is developed based on [https://github.com/xtherk/open-claude-code/](https://github.com/xtherk/open-claude-code/). As a result, some native ClaudeCode MCP features are not yet supported.
+
+| Component | Current Progress | Usability |
+| --- | --- | --- |
+| `@ant/claude-for-chrome-mcp` | Minimal compatibility layer added; builds properly and exposes browser MCP tool definitions. | Can list tools, but read‑like interfaces return empty results or "unavailable"; **cannot** actually connect to the browser extension, establish a pairing session, or perform real browser bridging operations. |
+| `@ant/computer-use-mcp` | Minimal compatibility layer added; main package and subpath exports are both in place. | Provides minimal state interfaces such as `request_access`, `list_granted_applications`, `current_display`, `switch_display`, `list_displays`. Real Computer Use actions (mouse, keyboard, screenshot, clipboard, etc.) are currently placeholders/unavailable. |
+| `@ant/computer-use-input` | Minimal stub added. | Currently provides only a degraded semantic of `isSupported = false` to avoid missing‑package errors; **does not** provide real input injection capabilities. |
+| `@ant/computer-use-swift` | Minimal native compatibility layer shape added for macOS. | Query interfaces for permissions, applications, displays, etc. return empty values or defaults; native capabilities such as screenshot, opening applications, and capture preparation are still not restored. |
+| `image-processor-napi` | Replaced with `sharp` as an open‑source alternative; compat exports added. | Basic image reading, resizing, and compression are largely usable. However, `getNativeModule()` currently returns `null`, so logic that depends on the native fast path (e.g., image/clipboard operations) automatically falls back to existing fallbacks. |
+| `color-diff-napi` | No longer depends on the native package; re‑implemented as local TypeScript. | Main structured diff and syntax highlighting pipelines are usable, but the implementation is based on `highlight.js`, not a 1:1 restoration of the original native stack. Details like `BAT_THEME` are still compatibility‑layer implementations. |
+| `audio-capture-napi` | Minimal stub added to prevent voice features from crashing due to missing packages. | On Windows, real native recording backend is still unavailable. On Linux/macOS, the existing `arecord`/`rec` fallback paths are attempted, but this does **not** mean the original native recording capability has been restored. |
+
+> In short: these compatibility layers are now sufficient for the source‑restored version to build, run the main workflow, and support code reading and interface comparison. Among them, `image-processor-napi` and `color-diff-napi` are relatively more restored, while browser, computer‑use, and native audio are still largely in a degraded state.
+
+# Special Thanks: 
+
+https://linux.do
+https://github.com/xtherk/open-claude-code/
+
+
 ## Highlights
 
 - First-run setup for `API Type`, `API Key`, `Base URL`, and `Model`
@@ -73,7 +97,7 @@ Model: claude-sonnet-4-5
 ```text
 API Type: openai-responses
 Base URL: https://example.com/v1
-Model: gpt-4.1
+Model: gpt-5.4
 ```
 
 ### OpenAI-Compatible Chat Completions API

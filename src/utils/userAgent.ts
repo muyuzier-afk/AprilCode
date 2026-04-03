@@ -7,5 +7,5 @@ import { RECOVERY_MACRO } from '../recovery/macroShim.js';
  */
 
 export function getClaudeCodeUserAgent(): string {
-  return `claude-code/${RECOVERY_MACRO.VERSION}`
+  return `april-cli/${RECOVERY_MACRO.VERSION}`
 }

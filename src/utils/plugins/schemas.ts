@@ -37,7 +37,7 @@ const NO_AUTO_UPDATE_OFFICIAL_MARKETPLACES = new Set(['knowledge-work-plugins'])
 /**
  * Check if auto-update is enabled for a marketplace.
  * Uses the stored value if set, otherwise defaults based on whether
- * it's an official Anthropic marketplace (true) or not (false).
+ * it's an official marketplace (true) or not (false).
  * Official marketplaces in NO_AUTO_UPDATE_OFFICIAL_MARKETPLACES are excluded
  * from the auto-update default.
  *
@@ -101,7 +101,7 @@ export function isBlockedOfficialName(name: string): boolean {
 }
 
 /**
- * The official GitHub organization for Anthropic marketplaces.
+ * The official GitHub organization for official marketplaces.
  * Reserved names must come from this org.
  */
 export const OFFICIAL_GITHUB_ORG = 'anthropics'
@@ -132,7 +132,7 @@ export function validateOfficialNameSource(
     // Verify the repo is from the official org
     const repo = source.repo || ''
     if (!repo.toLowerCase().startsWith(`${OFFICIAL_GITHUB_ORG}/`)) {
-      return `The name '${name}' is reserved for official Anthropic marketplaces. Only repositories from 'github.com/${OFFICIAL_GITHUB_ORG}/' can use this name.`
+      return `The name '${name}' is reserved for official marketplaces. Only repositories from 'github.com/${OFFICIAL_GITHUB_ORG}/' can use this name.`
     }
     return null // Valid: reserved name from official GitHub source
   }
@@ -149,11 +149,11 @@ export function validateOfficialNameSource(
       return null // Valid: reserved name from official git URL
     }
 
-    return `The name '${name}' is reserved for official Anthropic marketplaces. Only repositories from 'github.com/${OFFICIAL_GITHUB_ORG}/' can use this name.`
+    return `The name '${name}' is reserved for official marketplaces. Only repositories from 'github.com/${OFFICIAL_GITHUB_ORG}/' can use this name.`
   }
 
   // Reserved names must come from GitHub (either 'github' or 'git' source)
-  return `The name '${name}' is reserved for official Anthropic marketplaces and can only be used with GitHub sources from the '${OFFICIAL_GITHUB_ORG}' organization.`
+  return `The name '${name}' is reserved for official marketplaces and can only be used with GitHub sources from the '${OFFICIAL_GITHUB_ORG}' organization.`
 }
 
 /**
@@ -323,7 +323,7 @@ const PluginManifestMetadataSchema = lazySchema(() =>
  * Schema for plugin hooks configuration (hooks.json)
  *
  * Defines the hooks that a plugin can provide to intercept and modify
- * Claude Code behavior at various lifecycle events.
+ * April Code behavior at various lifecycle events.
  */
 export const PluginHooksSchema = lazySchema(() =>
   z.object({
@@ -1228,7 +1228,7 @@ export function isLocalPluginSource(source: PluginSource): source is string {
  * For local sources (`file`/`directory`), `installLocation` IS the user's path —
  * it lives outside the plugins cache dir and marketplace operations on it are
  * read-only. For remote sources (`github`/`git`/`url`/`npm`), `installLocation`
- * is a cache-dir entry managed by Claude Code and subject to rm/re-clone.
+ * is a cache-dir entry managed by April Code and subject to rm/re-clone.
  *
  * Contrast with isLocalPluginSource, which operates on PluginSource (the
  * per-plugin source inside a marketplace entry) and checks for `./` prefix.
@@ -1465,10 +1465,10 @@ export const InstalledPluginSchema = lazySchema(() =>
  * Schema for the installed_plugins.json file (V1 format)
  *
  * Contains a version number and maps plugin IDs to their installation metadata.
- * Maintained automatically by Claude Code, not edited by users.
+ * Maintained automatically by April Code, not edited by users.
  *
  * The version field tracks schema changes. When the version doesn't match
- * the current schema version, Claude Code will update the file on next startup.
+ * the current schema version, April Code will update the file on next startup.
  *
  * Example file:
  * {
@@ -1496,7 +1496,7 @@ export const InstalledPluginsFileSchemaV1 = lazySchema(() =>
  *
  * Plugins can be installed at different scopes:
  * - managed: Enterprise/system-wide (read-only, platform-specific paths)
- * - user: User's global settings (~/.claude/settings.json)
+ * - user: User's global settings (~/.april/settings.json)
  * - project: Shared project settings ($project/.claude/settings.json)
  * - local: Personal project overrides ($project/.claude/settings.local.json)
  *

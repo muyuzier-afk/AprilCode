@@ -1,29 +1,72 @@
 import memoize from 'lodash-es/memoize.js'
 import { homedir } from 'os'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { fileSuffixForOauthConfig } from '../constants/oauth.js'
 import { isRunningWithBun } from './bundledMode.js'
-import { getClaudeConfigHomeDir, isEnvTruthy } from './envUtils.js'
+import {
+  getClaudeConfigHomeDir,
+  getLegacyClaudeConfigHomeDir,
+  isEnvTruthy,
+} from './envUtils.js'
 import { findExecutable } from './findExecutable.js'
 import { getFsImplementation } from './fsOperations.js'
 import { which } from './which.js'
 
 type Platform = 'win32' | 'darwin' | 'linux'
 
-// Config and data paths
-export const getGlobalClaudeFile = memoize((): string => {
-  // Legacy fallback for backwards compatibility
-  if (
-    getFsImplementation().existsSync(
-      join(getClaudeConfigHomeDir(), '.config.json'),
-    )
-  ) {
-    return join(getClaudeConfigHomeDir(), '.config.json')
+function getConfigPathCacheKey(): string {
+  return [
+    process.env.APRIL_CONFIG_DIR ?? '',
+    process.env.CLAUDE_CONFIG_DIR ?? '',
+  ].join('\0')
+}
+
+function shouldUseLegacyGlobalConfigPath(): boolean {
+  return !process.env.APRIL_CONFIG_DIR && Boolean(process.env.CLAUDE_CONFIG_DIR)
+}
+
+function copyLegacyGlobalConfigIfNeeded(targetPath: string): void {
+  const fs = getFsImplementation()
+  if (fs.existsSync(targetPath)) {
+    return
   }
 
-  const filename = `.claude${fileSuffixForOauthConfig()}.json`
-  return join(process.env.CLAUDE_CONFIG_DIR || homedir(), filename)
-})
+  const suffix = fileSuffixForOauthConfig()
+  const legacyCandidates = [
+    join(getLegacyClaudeConfigHomeDir(), '.config.json'),
+    join(homedir(), `.claude${suffix}.json`),
+  ]
+
+  for (const legacyPath of legacyCandidates) {
+    if (legacyPath === targetPath || !fs.existsSync(legacyPath)) {
+      continue
+    }
+
+    fs.mkdirSync(dirname(targetPath))
+    fs.copyFileSync(legacyPath, targetPath)
+    return
+  }
+}
+
+// Config and data paths
+export const getGlobalClaudeFile = memoize((): string => {
+  if (shouldUseLegacyGlobalConfigPath()) {
+    if (
+      getFsImplementation().existsSync(
+        join(getClaudeConfigHomeDir(), '.config.json'),
+      )
+    ) {
+      return join(getClaudeConfigHomeDir(), '.config.json')
+    }
+
+    const filename = `.claude${fileSuffixForOauthConfig()}.json`
+    return join(process.env.CLAUDE_CONFIG_DIR || homedir(), filename)
+  }
+
+  const activeConfigPath = join(getClaudeConfigHomeDir(), '.config.json')
+  copyLegacyGlobalConfigIfNeeded(activeConfigPath)
+  return activeConfigPath
+}, getConfigPathCacheKey)
 
 const hasInternetAccess = memoize(async (): Promise<boolean> => {
   try {

@@ -58,7 +58,7 @@ export function hashPluginId(name: string, marketplace?: string): string {
  * (managed/user/project/local) which is installation-target — this is
  * marketplace-origin.
  *
- * - official: from an allowlisted Anthropic marketplace
+ * - official: from an allowlisted official marketplace
  * - default-bundle: ships with product (@builtin), auto-enabled
  * - org: enterprise admin-pushed via managed settings (policySettings)
  * - user-local: user added marketplace or local plugin

@@ -3,7 +3,7 @@ import type { Command } from '../commands.js'
 import { maybeMarkProjectOnboardingComplete } from '../projectOnboardingState.js'
 import { isEnvTruthy } from '../utils/envUtils.js'
 
-const OLD_INIT_PROMPT = `Please analyze this codebase and create a CLAUDE.md file, which will be given to future instances of Claude Code to operate in this repository.
+const OLD_INIT_PROMPT = `Please analyze this codebase and create a CLAUDE.md file, which will be given to future instances of April Code to operate in this repository.
 
 What to add:
 1. Commands that will be commonly used, such as how to build, lint, and run tests. Include the necessary commands to develop in this codebase, such as how to run a single test.
@@ -22,10 +22,10 @@ Usage notes:
 \`\`\`
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to April Code (claude.ai/code) when working with code in this repository.
 \`\`\``
 
-const NEW_INIT_PROMPT = `Set up a minimal CLAUDE.md (and optionally skills and hooks) for this repo. CLAUDE.md is loaded into every Claude Code session, so it must be concise — only include what Claude would get wrong without it.
+const NEW_INIT_PROMPT = `Set up a minimal CLAUDE.md (and optionally skills and hooks) for this repo. CLAUDE.md is loaded into every April Code session, so it must be concise — only include what Claude would get wrong without it.
 
 ## Phase 1: Ask what to set up
 
@@ -67,7 +67,7 @@ If the user chose personal CLAUDE.local.md or both: ask about them, not the code
   - What's their role on the team? (e.g., "backend engineer", "data scientist", "new hire onboarding")
   - How familiar are they with this codebase and its languages/frameworks? (so Claude can calibrate explanation depth)
   - Do they have personal sandbox URLs, test accounts, API key paths, or local setup details Claude should know?
-  - Only if Phase 2 found multiple git worktrees: ask whether their worktrees are nested inside the main repo (e.g., \`.claude/worktrees/<name>/\`) or siblings/external (e.g., \`../myrepo-feature/\`). If nested, the upward file walk finds the main repo's CLAUDE.local.md automatically — no special handling needed. If sibling/external, the personal content should live in a home-directory file (e.g., \`~/.claude/<project-name>-instructions.md\`) and each worktree gets a one-line CLAUDE.local.md stub that imports it: \`@~/.claude/<project-name>-instructions.md\`. Never put this import in the project CLAUDE.md — that would check a personal reference into the team-shared file.
+  - Only if Phase 2 found multiple git worktrees: ask whether their worktrees are nested inside the main repo (e.g., \`.claude/worktrees/<name>/\`) or siblings/external (e.g., \`../myrepo-feature/\`). If nested, the upward file walk finds the main repo's CLAUDE.local.md automatically — no special handling needed. If sibling/external, the personal content should live in a home-directory file (e.g., \`~/.april/<project-name>-instructions.md\`) and each worktree gets a one-line CLAUDE.local.md stub that imports it: \`@~/.april/<project-name>-instructions.md\`. Never put this import in the project CLAUDE.md — that would check a personal reference into the team-shared file.
   - Any communication preferences? (e.g., "be terse", "always explain tradeoffs", "don't summarize at the end")
 
 **Synthesize a proposal from Phase 2 findings** — e.g., format-on-edit if a formatter exists, a \`/verify\` skill if tests exist, a CLAUDE.md note for anything from the gap-fill answers that's a guideline rather than a workflow. For each, pick the artifact type that fits, **constrained by the Phase 1 skills+hooks choice**:
@@ -125,7 +125,7 @@ Prefix the file with:
 \`\`\`
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to April Code (claude.ai/code) when working with code in this repository.
 \`\`\`
 
 If CLAUDE.md already exists: read it, propose specific changes as diffs, and explain why each change improves it. Do not silently overwrite.
@@ -147,7 +147,7 @@ Include:
 
 Keep it short — only include what would make Claude's responses noticeably better for this user.
 
-If Phase 2 found multiple git worktrees and the user confirmed they use sibling/external worktrees (not nested inside the main repo): the upward file walk won't find a single CLAUDE.local.md from all worktrees. Write the actual personal content to \`~/.claude/<project-name>-instructions.md\` and make CLAUDE.local.md a one-line stub that imports it: \`@~/.claude/<project-name>-instructions.md\`. The user can copy this one-line stub to each sibling worktree. Never put this import in the project CLAUDE.md. If worktrees are nested inside the main repo (e.g., \`.claude/worktrees/\`), no special handling is needed — the main repo's CLAUDE.local.md is found automatically.
+If Phase 2 found multiple git worktrees and the user confirmed they use sibling/external worktrees (not nested inside the main repo): the upward file walk won't find a single CLAUDE.local.md from all worktrees. Write the actual personal content to \`~/.april/<project-name>-instructions.md\` and make CLAUDE.local.md a one-line stub that imports it: \`@~/.april/<project-name>-instructions.md\`. The user can copy this one-line stub to each sibling worktree. Never put this import in the project CLAUDE.md. If worktrees are nested inside the main repo (e.g., \`.claude/worktrees/\`), no special handling is needed — the main repo's CLAUDE.local.md is found automatically.
 
 If CLAUDE.local.md already exists: read it, propose specific additions, and do not silently overwrite.
 
@@ -214,13 +214,13 @@ Act on each "yes" before moving on.
 
 Recap what was set up — which files were written and the key points included in each. Remind the user these files are a starting point: they should review and tweak them, and can run \`/init\` again anytime to re-scan.
 
-Then tell the user that you'll be introducing a few more suggestions for optimizing their codebase and Claude Code setup based on what you found. Present these as a single, well-formatted to-do list where every item is relevant to this repo. Put the most impactful items first.
+Then tell the user that you'll be introducing a few more suggestions for optimizing their codebase and April Code setup based on what you found. Present these as a single, well-formatted to-do list where every item is relevant to this repo. Put the most impactful items first.
 
 When building the list, work through these checks and include only what applies:
 - If frontend code was detected (React, Vue, Svelte, etc.): \`/plugin install frontend-design@claude-plugins-official\` gives Claude design principles and component patterns so it produces polished UI; \`/plugin install playwright@claude-plugins-official\` lets Claude launch a real browser, screenshot what it built, and fix visual bugs itself.
 - If you found gaps in Phase 7 (missing GitHub CLI, missing linting) and the user said no: list them here with a one-line reason why each helps.
 - If tests are missing or sparse: suggest setting up a test framework so Claude can verify its own changes.
-- To help you create skills and optimize existing skills using evals, Claude Code has an official skill-creator plugin you can install. Install it with \`/plugin install skill-creator@claude-plugins-official\`, then run \`/skill-creator <skill-name>\` to create new skills or refine any existing skill. (Always include this one.)
+- To help you create skills and optimize existing skills using evals, April Code has an official skill-creator plugin you can install. Install it with \`/plugin install skill-creator@claude-plugins-official\`, then run \`/skill-creator <skill-name>\` to create new skills or refine any existing skill. (Always include this one.)
 - Browse official plugins with \`/plugin\` — these bundle skills, agents, hooks, and MCP servers that you may find helpful. You can also create your own custom plugins to share them with others. (Always include this one.)`
 
 const command = {

@@ -68,7 +68,6 @@ import {
 import {
   clearKeychainCache,
   getMacOsKeychainStorageServiceName,
-  getUsername,
 } from './secureStorage/macOsKeychainHelpers.js'
 import {
   getSettings_DEPRECATED,
@@ -83,7 +82,7 @@ const DEFAULT_API_KEY_HELPER_TTL = 5 * 60 * 1000
 
 /**
  * CCR and Claude Desktop spawn the CLI with OAuth and should never fall back
- * to the user's ~/.claude/settings.json API-key config (apiKeyHelper,
+ * to the user's ~/.april/settings.json API-key config (apiKeyHelper,
  * env.ANTHROPIC_API_KEY, env.ANTHROPIC_AUTH_TOKEN). Those settings exist for
  * the user's terminal CLI, not managed sessions. Without this guard, a user
  * who runs `claude` in their terminal with an API key sees every CCD session
@@ -99,54 +98,7 @@ function isManagedOAuthContext(): boolean {
 /** Whether we are supporting direct 1P auth. */
 // this code is closely related to getAuthTokenSource
 export function isAnthropicAuthEnabled(): boolean {
-  // --bare: API-key-only, never OAuth.
-  if (isBareMode()) return false
-
-  // `claude ssh` remote: ANTHROPIC_UNIX_SOCKET tunnels API calls through a
-  // local auth-injecting proxy. The launcher sets CLAUDE_CODE_OAUTH_TOKEN as a
-  // placeholder iff the local side is a subscriber (so the remote includes the
-  // oauth-2025 beta header to match what the proxy will inject). The remote's
-  // ~/.claude settings (apiKeyHelper, settings.env.ANTHROPIC_API_KEY) MUST NOT
-  // flip this — they'd cause a header mismatch with the proxy and a bogus
-  // "invalid x-api-key" from the API. See src/ssh/sshAuthProxy.ts.
-  if (process.env.ANTHROPIC_UNIX_SOCKET) {
-    return !!process.env.CLAUDE_CODE_OAUTH_TOKEN
-  }
-
-  const is3P =
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
-
-  // Check if user has configured an external API key source
-  // This allows externally-provided API keys to work (without requiring proxy configuration)
-  const settings = getSettings_DEPRECATED() || {}
-  const apiKeyHelper = settings.apiKeyHelper
-  const hasExternalAuthToken =
-    process.env.ANTHROPIC_AUTH_TOKEN ||
-    apiKeyHelper ||
-    process.env.CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR
-
-  // Check if API key is from an external source (not managed by /login)
-  const { source: apiKeySource } = getAnthropicApiKeyWithSource({
-    skipRetrievingKeyFromApiKeyHelper: true,
-  })
-  const hasExternalApiKey =
-    apiKeySource === 'ANTHROPIC_API_KEY' || apiKeySource === 'apiKeyHelper'
-
-  // Disable Anthropic auth if:
-  // 1. Using 3rd party services (Bedrock/Vertex/Foundry)
-  // 2. User has an external API key (regardless of proxy configuration)
-  // 3. User has an external auth token (regardless of proxy configuration)
-  // this may cause issues if users have complex proxy / gateway "client-side creds" auth scenarios,
-  // e.g. if they want to set X-Api-Key to a gateway key but use Anthropic OAuth for the Authorization
-  // if we get reports of that, we should probably add an env var to force OAuth enablement
-  const shouldDisableAuth =
-    is3P ||
-    (hasExternalAuthToken && !isManagedOAuthContext()) ||
-    (hasExternalApiKey && !isManagedOAuthContext())
-
-  return !shouldDisableAuth
+  return false
 }
 
 /** Where the auth token is being sourced from, if any. */
@@ -351,7 +303,7 @@ export function getAnthropicApiKeyWithSource(
 /**
  * Get the configured apiKeyHelper from settings.
  * In bare mode, only the --settings flag source is consulted — apiKeyHelper
- * from ~/.claude/settings.json or project settings is ignored.
+ * from ~/.april/settings.json or project settings is ignored.
  */
 export function getConfiguredApiKeyHelper(): string | undefined {
   if (isBareMode()) {
@@ -688,7 +640,7 @@ export function refreshAwsAuth(awsAuthRefresh: string): Promise<boolean> {
               'AWS auth refresh timed out after 3 minutes. Run your auth command manually in a separate terminal.',
             )
           : chalk.red(
-              'Error running awsAuthRefresh (in settings or ~/.claude.json):',
+              'Error running awsAuthRefresh (in settings or ~/.april/.config.json):',
             )
         // biome-ignore lint/suspicious/noConsole:: intentional console output
         console.error(message)
@@ -766,7 +718,7 @@ async function getAwsCredsFromCredentialExport(): Promise<{
       }
     } catch (e) {
       const message = chalk.red(
-        'Error getting AWS credentials from awsCredentialExport (in settings or ~/.claude.json):',
+        'Error getting AWS credentials from awsCredentialExport (in settings or ~/.april/.config.json):',
       )
       if (e instanceof Error) {
         // biome-ignore lint/suspicious/noConsole:: intentional console output
@@ -956,7 +908,7 @@ export function refreshGcpAuth(gcpAuthRefresh: string): Promise<boolean> {
               'GCP auth refresh timed out after 3 minutes. Run your auth command manually in a separate terminal.',
             )
           : chalk.red(
-              'Error running gcpAuthRefresh (in settings or ~/.claude.json):',
+              'Error running gcpAuthRefresh (in settings or ~/.april/.config.json):',
             )
         // biome-ignore lint/suspicious/noConsole:: intentional console output
         console.error(message)
@@ -1052,7 +1004,6 @@ export function prefetchAwsCredentialsAndBedRockInfoIfSafe(): void {
 export const getApiKeyFromConfigOrMacOSKeychain = memoize(
   (): { key: string; source: ApiKeySource } | null => {
     if (isBareMode()) return null
-    // TODO: migrate to SecureStorage
     if (process.platform === 'darwin') {
       // keychainPrefetch.ts fires this read at main.tsx top-level in parallel
       // with module imports. If it completed, use that instead of spawning a
@@ -1078,18 +1029,72 @@ export const getApiKeyFromConfigOrMacOSKeychain = memoize(
       }
     }
 
+    const storedApiKey = readStoredPrimaryApiKey()
+    if (storedApiKey) {
+      return { key: storedApiKey, source: '/login managed key' }
+    }
+
     const config = getGlobalConfig()
     if (!config.primaryApiKey) {
       return null
+    }
+
+    try {
+      writeStoredPrimaryApiKey(config.primaryApiKey)
+      clearLegacyPrimaryApiKeyFromConfig()
+    } catch (error) {
+      logError(error)
     }
 
     return { key: config.primaryApiKey, source: '/login managed key' }
   },
 )
 
+function readStoredPrimaryApiKey(): string | null {
+  try {
+    const apiKey = getSecureStorage().read()?.primaryApiKey
+    return apiKey?.trim() ? apiKey : null
+  } catch (error) {
+    logError(error)
+    return null
+  }
+}
+
+function writeStoredPrimaryApiKey(apiKey: string | undefined): void {
+  const secureStorage = getSecureStorage()
+  const storageData = secureStorage.read() || {}
+
+  if (apiKey) {
+    storageData.primaryApiKey = apiKey
+  } else if (storageData.primaryApiKey === undefined) {
+    return
+  } else {
+    delete storageData.primaryApiKey
+  }
+
+  const updateStatus = secureStorage.update(storageData)
+  if (!updateStatus.success) {
+    throw new Error(
+      apiKey
+        ? 'Failed to securely store API key.'
+        : 'Failed to securely clear API key.',
+    )
+  }
+}
+
+function clearLegacyPrimaryApiKeyFromConfig(): void {
+  saveGlobalConfig(current =>
+    current.primaryApiKey === undefined
+      ? current
+      : {
+          ...current,
+          primaryApiKey: undefined,
+        },
+  )
+}
+
 function isValidApiKey(apiKey: string): boolean {
-  // Only allow alphanumeric characters, dashes, and underscores
-  return /^[a-zA-Z0-9-_]+$/.test(apiKey)
+  return /^\S+$/.test(apiKey)
 }
 
 export async function saveApiKey(apiKey: string): Promise<void> {
@@ -1101,50 +1106,26 @@ export async function saveApiKey(apiKey: string): Promise<void> {
 
   // Store as primary API key
   await maybeRemoveApiKeyFromMacOSKeychain()
-  let savedToKeychain = false
-  if (process.platform === 'darwin') {
-    try {
-      // TODO: migrate to SecureStorage
-      const storageServiceName = getMacOsKeychainStorageServiceName()
-      const username = getUsername()
-
-      // Convert to hexadecimal to avoid any escaping issues
-      const hexValue = Buffer.from(apiKey, 'utf-8').toString('hex')
-
-      // Use security's interactive mode (-i) with -X (hexadecimal) option
-      // This ensures credentials never appear in process command-line arguments
-      // Process monitors only see "security -i", not the password
-      const command = `add-generic-password -U -a "${username}" -s "${storageServiceName}" -X "${hexValue}"\n`
-
-      await execa('security', ['-i'], {
-        input: command,
-        reject: false,
-      })
-
-      logEvent('tengu_api_key_saved_to_keychain', {})
-      savedToKeychain = true
-    } catch (e) {
-      logError(e)
-      logEvent('tengu_api_key_keychain_error', {
-        error: errorMessage(
-          e,
-        ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      })
-      logEvent('tengu_api_key_saved_to_config', {})
-    }
-  } else {
-    logEvent('tengu_api_key_saved_to_config', {})
+  try {
+    writeStoredPrimaryApiKey(apiKey)
+    logEvent('tengu_api_key_saved_to_keychain', {})
+  } catch (error) {
+    logError(error)
+    logEvent('tengu_api_key_keychain_error', {
+      error: errorMessage(
+        error,
+      ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+    })
+    throw error
   }
 
   const normalizedKey = normalizeApiKeyForConfig(apiKey)
 
-  // Save config with all updates
   saveGlobalConfig(current => {
     const approved = current.customApiKeyResponses?.approved ?? []
     return {
       ...current,
-      // Only save to config if keychain save failed or not on darwin
-      primaryApiKey: savedToKeychain ? current.primaryApiKey : apiKey,
+      primaryApiKey: undefined,
       customApiKeyResponses: {
         ...current.customApiKeyResponses,
         approved: approved.includes(normalizedKey)
@@ -1170,13 +1151,11 @@ export function isCustomApiKeyApproved(apiKey: string): boolean {
 
 export async function removeApiKey(): Promise<void> {
   await maybeRemoveApiKeyFromMacOSKeychain()
+  writeStoredPrimaryApiKey(undefined)
 
   // Also remove from config instead of returning early, for older clients
   // that set keys before we supported keychain.
-  saveGlobalConfig(current => ({
-    ...current,
-    primaryApiKey: undefined,
-  }))
+  clearLegacyPrimaryApiKeyFromConfig()
 
   // Clear memo cache
   getApiKeyFromConfigOrMacOSKeychain.cache.clear?.()
@@ -1950,7 +1929,7 @@ export async function validateForceLoginOrg(): Promise<OrgValidationResult> {
 
   // Always fetch the authoritative org UUID from the profile endpoint.
   // Even keychain-sourced tokens verify server-side: the cached org UUID
-  // in ~/.claude.json is user-writable and cannot be trusted.
+  // in ~/.april/.config.json is user-writable and cannot be trusted.
   const { source } = getAuthTokenSource()
   const isEnvVarToken =
     source === 'CLAUDE_CODE_OAUTH_TOKEN' ||
@@ -1965,8 +1944,8 @@ export async function validateForceLoginOrg(): Promise<OrgValidationResult> {
         `Unable to verify organization for the current authentication token.\n` +
         `This machine requires organization ${requiredOrgUuid} but the profile could not be fetched.\n` +
         `This may be a network error, or the token may lack the user:profile scope required for\n` +
-        `verification (tokens from 'claude setup-token' do not include this scope).\n` +
-        `Try again, or obtain a full-scope token via 'claude auth login'.`,
+        `verification (tokens from 'april setup-token' do not include this scope).\n` +
+        `Try again, or obtain a full-scope token via 'april auth login'.`,
     }
   }
 
@@ -1996,7 +1975,7 @@ export async function validateForceLoginOrg(): Promise<OrgValidationResult> {
     message:
       `Your authentication token belongs to organization ${tokenOrgUuid},\n` +
       `but this machine requires organization ${requiredOrgUuid}.\n\n` +
-      `Please log in with the correct organization: claude auth login`,
+      `Please log in with the correct organization: april auth login`,
   }
 }
 

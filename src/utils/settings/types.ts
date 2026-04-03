@@ -63,7 +63,7 @@ export const PermissionsSchema = lazySchema(() =>
             : EXTERNAL_PERMISSION_MODES,
         )
         .optional()
-        .describe('Default permission mode when Claude Code needs access'),
+        .describe('Default permission mode when April Code needs access'),
       disableBypassPermissionsMode: z
         .enum(['disable'])
         .optional()
@@ -258,7 +258,7 @@ export const SettingsSchema = lazySchema(() =>
       $schema: z
         .literal(CLAUDE_CODE_SETTINGS_SCHEMA_URL)
         .optional()
-        .describe('JSON Schema reference for Claude Code settings'),
+        .describe('JSON Schema reference for April Code settings'),
       apiKeyHelper: z
         .string()
         .optional()
@@ -291,7 +291,7 @@ export const SettingsSchema = lazySchema(() =>
                   .describe('IdP issuer URL for OIDC discovery'),
                 clientId: z
                   .string()
-                  .describe("Claude Code's client_id registered at the IdP"),
+                  .describe("April Code's client_id registered at the IdP"),
                 callbackPort: z
                   .number()
                   .int()
@@ -332,7 +332,7 @@ export const SettingsSchema = lazySchema(() =>
         ),
       env: EnvironmentVariablesSchema()
         .optional()
-        .describe('Environment variables to set for Claude Code sessions'),
+        .describe('Environment variables to set for April Code sessions'),
       // Attribution for commits and PRs
       attribution: z
         .object({
@@ -354,7 +354,7 @@ export const SettingsSchema = lazySchema(() =>
         .optional()
         .describe(
           'Customize attribution text for commits and PRs. ' +
-            'Each field defaults to the standard Claude Code attribution if not set.',
+            'Each field defaults to the standard April Code attribution if not set.',
         ),
       includeCoAuthoredBy: z
         .boolean()
@@ -375,7 +375,7 @@ export const SettingsSchema = lazySchema(() =>
       model: z
         .string()
         .optional()
-        .describe('Override the default model used by Claude Code'),
+        .describe('Override the default model used by April Code'),
       // Enterprise allowlist of models
       availableModels: z
         .array(z.string())
@@ -541,7 +541,7 @@ export const SettingsSchema = lazySchema(() =>
         .describe(
           'When set in managed settings, blocks non-plugin customization sources for the listed surfaces. ' +
             'Array form locks specific surfaces (e.g. ["skills", "hooks"]); `true` locks all four; `false` is an explicit no-op. ' +
-            'Blocked: ~/.claude/{surface}/, .claude/{surface}/ (project), settings.json hooks, .mcp.json. ' +
+            'Blocked: ~/.april/{surface}/, .claude/{surface}/ (project), settings.json hooks, .mcp.json. ' +
             'NOT blocked: managed (policySettings) sources, plugin-provided customizations. ' +
             'Composes with strictKnownMarketplaces for end-to-end admin control — plugins gated by ' +
             'marketplace allowlist, everything else blocked here.',
@@ -826,7 +826,7 @@ export const SettingsSchema = lazySchema(() =>
         .optional()
         .describe(
           'Custom directory for plan files, relative to project root. ' +
-            'If not set, defaults to ~/.claude/plans/',
+            'If not set, defaults to ~/.april/plans/',
         ),
       ...(process.env.USER_TYPE === 'ant'
         ? {
@@ -945,7 +945,7 @@ export const SettingsSchema = lazySchema(() =>
         .string()
         .optional()
         .describe(
-          'Custom directory path for auto-memory storage. Supports ~/ prefix for home directory expansion. Ignored if set in projectSettings (checked-in .claude/settings.json) for security. When unset, defaults to ~/.claude/projects/<sanitized-cwd>/memory/.',
+          'Custom directory path for auto-memory storage. Supports ~/ prefix for home directory expansion. Ignored if set in projectSettings (checked-in .claude/settings.json) for security. When unset, defaults to ~/.april/projects/<sanitized-cwd>/memory/.',
         ),
       autoDreamEnabled: z
         .boolean()

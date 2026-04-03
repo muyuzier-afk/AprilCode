@@ -2,11 +2,8 @@ import Anthropic, { type ClientOptions } from '@anthropic-ai/sdk'
 import { randomUUID } from 'crypto'
 import type { GoogleAuth } from 'google-auth-library'
 import {
-  checkAndRefreshOAuthTokenIfNeeded,
   getAnthropicApiKey,
   getApiKeyFromApiKeyHelper,
-  getClaudeAIOAuthTokens,
-  isClaudeAISubscriber,
   refreshAndGetAwsCredentials,
   refreshGcpCredentialsIfNeeded,
 } from '../../utils/auth.js'
@@ -17,17 +14,15 @@ import {
   isFirstPartyAnthropicBaseUrl,
 } from '../../utils/model/providers.js'
 import { getProxyFetchOptions } from '../../utils/proxy.js'
-import {
-  getIsNonInteractiveSession,
-  getSessionId,
-} from '../../bootstrap/state.js'
-import { getOauthConfig } from '../../constants/oauth.js'
+import { getIsNonInteractiveSession } from '../../bootstrap/state.js'
 import { isDebugToStdErr, logForDebugging } from '../../utils/debug.js'
 import {
   getAWSRegion,
   getVertexRegionForModel,
   isEnvTruthy,
 } from '../../utils/envUtils.js'
+import { isAnthropicApiFormat } from '../../utils/april.js'
+import { createOpenAICompatibleClient } from './openaiCompat.js'
 
 /**
  * Environment variables for different client types:
@@ -98,19 +93,13 @@ export async function getAnthropicClient({
   fetchOverride?: ClientOptions['fetch']
   source?: string
 }): Promise<Anthropic> {
-  const containerId = process.env.CLAUDE_CODE_CONTAINER_ID
-  const remoteSessionId = process.env.CLAUDE_CODE_REMOTE_SESSION_ID
   const clientApp = process.env.CLAUDE_AGENT_SDK_CLIENT_APP
   const customHeaders = getCustomHeaders()
+  const resolvedApiKey = apiKey || getAnthropicApiKey() || undefined
   const defaultHeaders: { [key: string]: string } = {
-    'x-app': 'cli',
+    'x-app': 'april-cli',
     'User-Agent': getUserAgent(),
-    'X-Claude-Code-Session-Id': getSessionId(),
     ...customHeaders,
-    ...(containerId ? { 'x-claude-remote-container-id': containerId } : {}),
-    ...(remoteSessionId
-      ? { 'x-claude-remote-session-id': remoteSessionId }
-      : {}),
     // SDK consumers can identify their app/library for backend analytics
     ...(clientApp ? { 'x-client-app': clientApp } : {}),
   }
@@ -120,23 +109,28 @@ export async function getAnthropicClient({
     `[API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: ${!!process.env.ANTHROPIC_CUSTOM_HEADERS}, has Authorization header: ${!!customHeaders['Authorization']}`,
   )
 
-  // Add additional protection header if enabled via env var
-  const additionalProtectionEnabled = isEnvTruthy(
-    process.env.CLAUDE_CODE_ADDITIONAL_PROTECTION,
-  )
-  if (additionalProtectionEnabled) {
-    defaultHeaders['x-anthropic-additional-protection'] = 'true'
+  if (!isFirstPartyAnthropicBaseUrl() && resolvedApiKey) {
+    defaultHeaders['Authorization'] = `Bearer ${resolvedApiKey}`
   }
-
-  logForDebugging('[API:auth] OAuth token check starting')
-  await checkAndRefreshOAuthTokenIfNeeded()
-  logForDebugging('[API:auth] OAuth token check complete')
-
-  if (!isClaudeAISubscriber()) {
-    await configureApiKeyHeaders(defaultHeaders, getIsNonInteractiveSession())
-  }
+  await configureApiKeyHeaders(defaultHeaders, getIsNonInteractiveSession())
 
   const resolvedFetch = buildFetch(fetchOverride, source)
+
+  if (!isAnthropicApiFormat()) {
+    const baseUrl = process.env.APRIL_BASE_URL || process.env.ANTHROPIC_BASE_URL
+    if (!baseUrl) {
+      throw new Error(
+        'APRIL_BASE_URL is required when using an OpenAI-compatible API format.',
+      )
+    }
+
+    return createOpenAICompatibleClient({
+      baseUrl,
+      defaultHeaders,
+      fetch: resolvedFetch ?? globalThis.fetch,
+      source,
+    })
+  }
 
   const ARGS = {
     defaultHeaders,
@@ -299,14 +293,11 @@ export async function getAnthropicClient({
 
   // Determine authentication method based on available tokens
   const clientConfig: ConstructorParameters<typeof Anthropic>[0] = {
-    apiKey: isClaudeAISubscriber() ? null : apiKey || getAnthropicApiKey(),
-    authToken: isClaudeAISubscriber()
-      ? getClaudeAIOAuthTokens()?.accessToken
-      : undefined,
-    // Set baseURL from OAuth config when using staging OAuth
-    ...(process.env.USER_TYPE === 'ant' &&
-    isEnvTruthy(process.env.USE_STAGING_OAUTH)
-      ? { baseURL: getOauthConfig().BASE_API_URL }
+    apiKey: resolvedApiKey,
+    ...(process.env.APRIL_BASE_URL || process.env.ANTHROPIC_BASE_URL
+      ? {
+          baseURL: process.env.APRIL_BASE_URL || process.env.ANTHROPIC_BASE_URL,
+        }
       : {}),
     ...ARGS,
     ...(isDebugToStdErr() && { logger: createStderrLogger() }),
@@ -322,7 +313,7 @@ async function configureApiKeyHeaders(
   const token =
     process.env.ANTHROPIC_AUTH_TOKEN ||
     (await getApiKeyFromApiKeyHelper(isNonInteractiveSession))
-  if (token) {
+  if (token && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${token}`
   }
 }

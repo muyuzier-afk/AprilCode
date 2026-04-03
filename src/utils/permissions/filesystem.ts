@@ -10,7 +10,8 @@ import { isAgentMemoryPath } from '../../tools/AgentTool/agentMemory.js'
 import {
   CLAUDE_FOLDER_PERMISSION_PATTERN,
   FILE_EDIT_TOOL_NAME,
-  GLOBAL_CLAUDE_FOLDER_PERMISSION_PATTERN,
+  getGlobalClaudeFolderPermissionPattern,
+  LEGACY_GLOBAL_CLAUDE_FOLDER_PERMISSION_PATTERN,
 } from '../../tools/FileEditTool/constants.js'
 import type { z } from 'zod/v4'
 import { getOriginalCwd, getSessionId } from '../../bootstrap/state.js'
@@ -111,8 +112,8 @@ export function getClaudeSkillScope(
       prefix: '/.claude/skills/',
     },
     {
-      dir: expandPath(join(homedir(), '.claude', 'skills')),
-      prefix: '~/.claude/skills/',
+      dir: expandPath(join(getClaudeConfigHomeDir(), 'skills')),
+      prefix: '~/.april/skills/',
     },
   ]
 
@@ -222,7 +223,7 @@ export function isClaudeSettingsPath(filePath: string): boolean {
   )
 }
 
-// Always ask when Claude Code tries to edit its own config files
+// Always ask when April Code tries to edit its own config files
 function isClaudeConfigFilePath(filePath: string): boolean {
   if (isClaudeSettingsPath(filePath)) {
     return true
@@ -280,7 +281,7 @@ function isSessionMemoryPath(absolutePath: string): boolean {
 
 /**
  * Check if file is within the current project's directory.
- * Path format: ~/.claude/projects/{sanitized-cwd}/...
+ * Path format: ~/.april/projects/{sanitized-cwd}/...
  */
 function isProjectDirPath(absolutePath: string): boolean {
   const projectDir = getProjectDir(getCwd())
@@ -320,7 +321,7 @@ export function getClaudeTempDirName(): string {
  * Uses TMPDIR env var if set, otherwise:
  * - On Unix: /tmp/claude-{uid}/ (resolved to /private/tmp/claude-{uid}/ on macOS)
  * - On Windows: {tmpdir}/claude/ (e.g., C:\Users\{user}\AppData\Local\Temp\claude\)
- * This is a per-user temporary directory used by Claude Code for all temp files.
+ * This is a per-user temporary directory used by April Code for all temp files.
  *
  * NOTE: We resolve symlinks to ensure this path matches the resolved paths used
  * in permission checks. On macOS, /tmp is a symlink to /private/tmp, so without
@@ -608,8 +609,8 @@ function hasSuspiciousWindowsPathPattern(path: string): boolean {
  *
  * This function performs comprehensive safety checks including:
  * - Suspicious Windows path patterns (NTFS streams, 8.3 names, long path prefixes, etc.)
- * - Claude config files (.claude/settings.json, .claude/commands/, .claude/agents/)
- * - MCP CLI state files (managed internally by Claude Code)
+ * - April config files (.claude/settings.json, .claude/commands/, .claude/agents/)
+ * - MCP CLI state files (managed internally by April Code)
  * - Dangerous files (.bashrc, .gitconfig, .git/, .vscode/, .idea/, etc.)
  *
  * IMPORTANT: This function checks BOTH the original path AND resolved symlink paths
@@ -639,7 +640,7 @@ export function checkPathSafetyForAutoEdit(
     }
   }
 
-  // Check for Claude config files on all paths
+  // Check for April config files on all paths
   for (const pathToCheck of pathsToCheck) {
     if (isClaudeConfigFilePath(pathToCheck)) {
       return {
@@ -1273,7 +1274,7 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
   )
   if (claudeFolderAllowRule) {
     // Check if this rule is scoped under .claude/ (project or global).
-    // Accepts both the broad patterns ('/.claude/**', '~/.claude/**') and
+    // Accepts both the broad patterns ('/.claude/**', '~/.april/**') and
     // narrowed ones like '/.claude/skills/my-skill/**' so users can grant
     // session access to a single skill without also exposing settings.json
     // or hooks/. The rule already matched the path via matchingRuleForInput;
@@ -1284,7 +1285,10 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
       ruleContent &&
       (ruleContent.startsWith(CLAUDE_FOLDER_PERMISSION_PATTERN.slice(0, -2)) ||
         ruleContent.startsWith(
-          GLOBAL_CLAUDE_FOLDER_PERMISSION_PATTERN.slice(0, -2),
+          getGlobalClaudeFolderPermissionPattern().slice(0, -2),
+        ) ||
+        ruleContent.startsWith(
+          LEGACY_GLOBAL_CLAUDE_FOLDER_PERMISSION_PATTERN.slice(0, -2),
         )) &&
       !ruleContent.includes('..') &&
       ruleContent.endsWith('/**')
@@ -1300,7 +1304,7 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
     }
   }
 
-  // 1.7. Check comprehensive safety validations (Windows patterns, Claude config, dangerous files)
+  // 1.7. Check comprehensive safety validations (Windows patterns, April config, dangerous files)
   // This MUST come before checking allow rules to prevent users from accidentally granting
   // permission to edit protected files
   const safetyCheck = checkPathSafetyForAutoEdit(path, pathsToCheck)
@@ -1512,7 +1516,7 @@ export function checkEditableInternalPath(
   // Template job's own directory. Env key hardcoded (vs importing JOB_ENV_KEY
   // from jobs/state) so tree-shaking eliminates the string from external
   // builds — spawn.test.ts asserts the string matches. Hijack guard: the env
-  // var value must itself resolve under ~/.claude/jobs/. Symlink guard: every
+  // var value must itself resolve under ~/.april/jobs/. Symlink guard: every
   // resolved form of the target (lexical + symlink chain) must fall under some
   // resolved form of the job dir, so a symlink inside the job dir pointing at
   // e.g. ~/.ssh/authorized_keys does not get a free write. Resolving both
@@ -1526,7 +1530,7 @@ export function checkEditableInternalPath(
       const jobsRootForms = getPathsForPermissionCheck(jobsRoot).map(normalize)
       // Hijack guard: every resolved form of the job dir must sit under
       // some resolved form of the jobs root. Resolving both sides handles
-      // the case where ~/.claude is a symlink (e.g. to /data/claude-config).
+      // the case where ~/.april is a symlink (e.g. to /data/claude-config).
       const isUnderJobsRoot = jobDirForms.every(jd =>
         jobsRootForms.some(jr => jd.startsWith(jr + sep)),
       )
@@ -1565,7 +1569,7 @@ export function checkEditableInternalPath(
 
   // Memdir directory (persistent memory for cross-session learning)
   // This pre-safety-check carve-out exists because the default path is under
-  // ~/.claude/, which is in DANGEROUS_DIRECTORIES. The CLAUDE_COWORK_MEMORY_PATH_OVERRIDE
+  // ~/.april/, which is in DANGEROUS_DIRECTORIES. The CLAUDE_COWORK_MEMORY_PATH_OVERRIDE
   // override is an arbitrary caller-designated directory with no such conflict,
   // so it gets NO special permission treatment here — writes go through normal
   // permission flow (step 5 → ask). SDK callers who want silent memory should
@@ -1587,7 +1591,7 @@ export function checkEditableInternalPath(
   // .claude/ DANGEROUS_DIRECTORIES check prompts for it, which in SDK mode
   // cascades: user clicks "Always allow" → setMode:acceptEdits suggestion
   // applied → silent downgrade from auto mode. Matches the project-level
-  // .claude/ only (not ~/.claude/) since launch.json is per-project.
+  // .claude/ only (not ~/.april/) since launch.json is per-project.
   if (
     normalizeCaseForComparison(normalizedPath) ===
     normalizeCaseForComparison(join(getOriginalCwd(), '.claude', 'launch.json'))
@@ -1630,7 +1634,7 @@ export function checkReadableInternalPath(
   }
 
   // Project directory (for reading past session memories)
-  // Path format: ~/.claude/projects/{sanitized-cwd}/...
+  // Path format: ~/.april/projects/{sanitized-cwd}/...
   if (isProjectDirPath(normalizedPath)) {
     return {
       behavior: 'allow',
@@ -1725,7 +1729,7 @@ export function checkReadableInternalPath(
     }
   }
 
-  // Tasks directory (~/.claude/tasks/) for swarm task coordination
+  // Tasks directory (~/.april/tasks/) for swarm task coordination
   const tasksDir = join(getClaudeConfigHomeDir(), 'tasks') + sep
   if (
     normalizedPath === tasksDir.slice(0, -1) ||
@@ -1741,7 +1745,7 @@ export function checkReadableInternalPath(
     }
   }
 
-  // Teams directory (~/.claude/teams/) for swarm coordination
+  // Teams directory (~/.april/teams/) for swarm coordination
   const teamsReadDir = join(getClaudeConfigHomeDir(), 'teams') + sep
   if (
     normalizedPath === teamsReadDir.slice(0, -1) ||

@@ -1,24 +1,29 @@
 {
-  "name": "@anthropic-ai/claude-code",
+  "name": "@april-ai/april-code",
   "version": "2.1.88",
   "bin": {
-    "claude": "dist/cli.js"
+    "april": "dist/cli.js"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "type": "module",
-  "author": "Anthropic <support@anthropic.com>",
+  "author": "April Code",
   "license": "SEE LICENSE IN README.md",
-  "description": "Use Claude, Anthropic's AI assistant, right from your terminal. Claude can understand your codebase, edit files, run terminal commands, and handle entire workflows for you.",
-  "homepage": "https://github.com/anthropics/claude-code",
+  "description": "Use April Code from your terminal. April Code can understand your codebase, edit files, run terminal commands, and handle full coding workflows.",
+  "homepage": "https://github.com/muyuzier-afk/AprilCode",
   "bugs": {
-    "url": "https://github.com/anthropics/claude-code/issues"
+    "url": "https://github.com/muyuzier-afk/AprilCode/issues"
   },
   "scripts": {
     "build": "bun build src/entrypoints/cli.tsx --outdir ./dist --target node --sourcemap",
     "start": "bun dist/cli.js",
-    "smoke": "node ./dist/cli.js --version"
+    "smoke": "node ./dist/cli.js --version",
+    "test": "bun run smoke",
+    "verify": "bun run build && bun run test"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@alcalzone/ansi-tokenize": "^0.3.0",

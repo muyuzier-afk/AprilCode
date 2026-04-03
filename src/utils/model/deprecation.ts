@@ -6,6 +6,8 @@
 
 import { type APIProvider, getAPIProvider } from './providers.js'
 
+type AnthropicProvider = Exclude<APIProvider, 'openai'>
+
 type DeprecatedModelInfo = {
   isDeprecated: true
   modelName: string
@@ -22,7 +24,9 @@ type DeprecationEntry = {
   /** Human-readable model name */
   modelName: string
   /** Retirement dates by provider (null = not deprecated for that provider) */
-  retirementDates: Record<APIProvider, string | null>
+  retirementDates: Record<AnthropicProvider, string | null> & {
+    openai?: string | null
+  }
 }
 
 /**
@@ -66,9 +70,10 @@ const DEPRECATED_MODELS: Record<string, DeprecationEntry> = {
 function getDeprecatedModelInfo(modelId: string): DeprecationInfo {
   const lowercaseModelId = modelId.toLowerCase()
   const provider = getAPIProvider()
+  const providerKey = provider === 'openai' ? 'firstParty' : provider
 
   for (const [key, value] of Object.entries(DEPRECATED_MODELS)) {
-    const retirementDate = value.retirementDates[provider]
+    const retirementDate = value.retirementDates[providerKey]
     if (!lowercaseModelId.includes(key) || !retirementDate) {
       continue
     }

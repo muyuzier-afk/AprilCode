@@ -1,10 +1,7 @@
 /**
- * Files API client for managing files
+ * Files API client for managing files.
  *
- * This module provides functionality to download and upload files to Anthropic Public Files API.
- * Used by the Claude Code agent to download file attachments at session startup.
- *
- * API Reference: https://docs.anthropic.com/en/api/files-content
+ * April Code only sends generic API authentication headers here.
  */
 
 import axios from 'axios'
@@ -22,19 +19,21 @@ import {
   logEvent,
 } from '../analytics/index.js'
 
-// Files API is currently in beta. oauth-2025-04-20 enables Bearer OAuth
-// on public-api routes (auth.py: "oauth_auth" not in beta_versions → 404).
-const FILES_API_BETA_HEADER = 'files-api-2025-04-14,oauth-2025-04-20'
-const ANTHROPIC_VERSION = '2023-06-01'
-
-// API base URL - uses ANTHROPIC_BASE_URL set by env-manager for the appropriate environment
-// Falls back to public API for standalone usage
+// API base URL - prefers April config and falls back to the legacy variable.
 function getDefaultApiBaseUrl(): string {
   return (
+    process.env.APRIL_BASE_URL ||
     process.env.ANTHROPIC_BASE_URL ||
     process.env.CLAUDE_CODE_API_BASE_URL ||
     'https://api.anthropic.com'
   )
+}
+
+function getFileApiHeaders(token: string): Record<string, string> {
+  return {
+    Authorization: `Bearer ${token}`,
+    'x-app': 'april-cli',
+  }
 }
 
 function logDebugError(message: string): void {
@@ -135,12 +134,7 @@ export async function downloadFile(
 ): Promise<Buffer> {
   const baseUrl = config.baseUrl || getDefaultApiBaseUrl()
   const url = `${baseUrl}/v1/files/${fileId}/content`
-
-  const headers = {
-    Authorization: `Bearer ${config.oauthToken}`,
-    'anthropic-version': ANTHROPIC_VERSION,
-    'anthropic-beta': FILES_API_BETA_HEADER,
-  }
+  const headers = getFileApiHeaders(config.oauthToken)
 
   logDebug(`Downloading file ${fileId} from ${url}`)
 
@@ -383,12 +377,7 @@ export async function uploadFile(
 ): Promise<UploadResult> {
   const baseUrl = config.baseUrl || getDefaultApiBaseUrl()
   const url = `${baseUrl}/v1/files`
-
-  const headers = {
-    Authorization: `Bearer ${config.oauthToken}`,
-    'anthropic-version': ANTHROPIC_VERSION,
-    'anthropic-beta': FILES_API_BETA_HEADER,
-  }
+  const headers = getFileApiHeaders(config.oauthToken)
 
   logDebug(`Uploading file ${filePath} as ${relativePath}`)
 
@@ -619,11 +608,7 @@ export async function listFilesCreatedAfter(
   config: FilesApiConfig,
 ): Promise<FileMetadata[]> {
   const baseUrl = config.baseUrl || getDefaultApiBaseUrl()
-  const headers = {
-    Authorization: `Bearer ${config.oauthToken}`,
-    'anthropic-version': ANTHROPIC_VERSION,
-    'anthropic-beta': FILES_API_BETA_HEADER,
-  }
+  const headers = getFileApiHeaders(config.oauthToken)
 
   logDebug(`Listing files created after ${afterCreatedAt}`)
 

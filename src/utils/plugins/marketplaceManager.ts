@@ -1,5 +1,5 @@
 /**
- * Marketplace manager for Claude Code plugins
+ * Marketplace manager for April Code plugins
  *
  * This module provides functionality to:
  * - Manage known marketplace sources (URLs, GitHub repos, npm packages, local files)
@@ -8,7 +8,7 @@
  * - Track and update marketplace configurations
  *
  * File structure managed by this module:
- * ~/.claude/
+ * ~/.april/
  *   └── plugins/
  *       ├── known_marketplaces.json    # Configuration of all known marketplaces
  *       └── marketplaces/              # Cache directory for marketplace data
@@ -240,7 +240,7 @@ export function saveMarketplaceToSettings(
 /**
  * Load known marketplaces configuration from disk
  *
- * Reads the configuration file at ~/.claude/plugins/known_marketplaces.json
+ * Reads the configuration file at ~/.april/plugins/known_marketplaces.json
  * which contains a mapping of marketplace names to their sources and metadata.
  *
  * Example configuration file content:
@@ -311,7 +311,7 @@ export async function loadKnownMarketplacesConfigSafe(): Promise<KnownMarketplac
     return await loadKnownMarketplacesConfig()
   } catch {
     // Inner function already logged via logForDebugging. Don't logError here —
-    // corrupted user config isn't a Claude Code bug, shouldn't hit the error file.
+    // corrupted user config isn't a April Code bug, shouldn't hit the error file.
     return {}
   }
 }
@@ -319,7 +319,7 @@ export async function loadKnownMarketplacesConfigSafe(): Promise<KnownMarketplac
 /**
  * Save known marketplaces configuration to disk
  *
- * Writes the configuration to ~/.claude/plugins/known_marketplaces.json,
+ * Writes the configuration to ~/.april/plugins/known_marketplaces.json,
  * creating the directory structure if it doesn't exist.
  *
  * @param config - The marketplace configuration to save
@@ -1418,7 +1418,7 @@ async function parseFileWithSchema<T>(
  * to match the marketplace's actual name from the manifest.
  *
  * Cache structure:
- * ~/.claude/plugins/marketplaces/
+ * ~/.april/plugins/marketplaces/
  *   ├── official-marketplace.json     # From URL source
  *   ├── github-marketplace/          # From GitHub/Git source
  *   │   └── .claude-plugin/
@@ -1771,7 +1771,7 @@ async function loadAndCacheMarketplace(
  * Add a marketplace source to the known marketplaces
  *
  * The marketplace is fetched, validated, and cached locally.
- * The configuration is saved to ~/.claude/plugins/known_marketplaces.json.
+ * The configuration is saved to ~/.april/plugins/known_marketplaces.json.
  *
  * @param source - MarketplaceSource object representing the marketplace source.
  *                 Callers should parse user input into MarketplaceSource format
@@ -2141,7 +2141,7 @@ export const getMarketplace = memoize(
       throw new Error(
         `Marketplace "${name}" has a relative source path (${entry.source.path}) ` +
           `in known_marketplaces.json — this is stale state from an older ` +
-          `Claude Code version. Run 'claude marketplace remove ${name}' and ` +
+          `April Code version. Run 'claude marketplace remove ${name}' and ` +
           `re-add it from the original project directory.`,
       )
     }

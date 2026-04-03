@@ -148,7 +148,7 @@ export async function getEnvLessBridgeConfig(): Promise<EnvLessBridgeConfig> {
 export async function checkEnvLessBridgeMinVersion(): Promise<string | null> {
   const cfg = await getEnvLessBridgeConfig()
   if (cfg.min_version && lt(RECOVERY_MACRO.VERSION, cfg.min_version)) {
-    return `Your version of Claude Code (${RECOVERY_MACRO.VERSION}) is too old for Remote Control.\nVersion ${cfg.min_version} or higher is required. Run \`claude update\` to update.`
+    return `Your version of April Code (${RECOVERY_MACRO.VERSION}) is too old for Remote Control.\nVersion ${cfg.min_version} or higher is required. Run \`claude update\` to update.`
   }
   return null
 }

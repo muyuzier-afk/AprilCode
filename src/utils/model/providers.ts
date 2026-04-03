@@ -1,7 +1,13 @@
 import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../../services/analytics/index.js'
+import { isAnthropicApiFormat } from '../april.js'
 import { isEnvTruthy } from '../envUtils.js'
 
-export type APIProvider = 'firstParty' | 'bedrock' | 'vertex' | 'foundry'
+export type APIProvider =
+  | 'firstParty'
+  | 'bedrock'
+  | 'vertex'
+  | 'foundry'
+  | 'openai'
 
 export function getAPIProvider(): APIProvider {
   return isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK)
@@ -10,7 +16,9 @@ export function getAPIProvider(): APIProvider {
       ? 'vertex'
       : isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
         ? 'foundry'
-        : 'firstParty'
+        : isAnthropicApiFormat()
+          ? 'firstParty'
+          : 'openai'
 }
 
 export function getAPIProviderForStatsig(): AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS {
@@ -23,7 +31,10 @@ export function getAPIProviderForStatsig(): AnalyticsMetadata_I_VERIFIED_THIS_IS
  * (or api-staging.anthropic.com for ant users).
  */
 export function isFirstPartyAnthropicBaseUrl(): boolean {
-  const baseUrl = process.env.ANTHROPIC_BASE_URL
+  if (!isAnthropicApiFormat()) {
+    return false
+  }
+  const baseUrl = process.env.APRIL_BASE_URL || process.env.ANTHROPIC_BASE_URL
   if (!baseUrl) {
     return true
   }

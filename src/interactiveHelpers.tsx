@@ -18,6 +18,7 @@ import { isQualifiedForGrove } from './services/api/grove.js';
 import { handleMcpjsonServerApprovals } from './services/mcpServerApproval.js';
 import { AppStateProvider } from './state/AppState.js';
 import { onChangeAppState } from './state/onChangeAppState.js';
+import { hasAprilApiConfig } from './utils/april.js';
 import { normalizeApiKeyForConfig } from './utils/authPortable.js';
 import { getExternalClaudeMdIncludes, getMemoryFiles, shouldShowClaudeMdExternalIncludesWarning } from './utils/claudemd.js';
 import { checkHasTrustDialogAccepted, getCustomApiKeyStatus, getGlobalConfig, saveGlobalConfig } from './utils/config.js';
@@ -33,6 +34,7 @@ import { hasAutoModeOptIn, hasSkipDangerousModePermissionPrompt } from './utils/
 export function completeOnboarding(): void {
   saveGlobalConfig(current => ({
     ...current,
+    hasCompletedAprilOnboarding: true,
     hasCompletedOnboarding: true,
     lastOnboardingVersion: RECOVERY_MACRO.VERSION
   }));
@@ -109,7 +111,7 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
   }
   const config = getGlobalConfig();
   let onboardingShown = false;
-  if (!config.theme || !config.hasCompletedOnboarding // always show onboarding at least once
+  if (!config.hasCompletedAprilOnboarding || !config.theme || !config.hasCompletedOnboarding || !hasAprilApiConfig() // always show onboarding at least once
   ) {
     onboardingShown = true;
     const {
@@ -184,11 +186,6 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
   // This includes potentially dangerous environment variables from untrusted sources
   applyConfigEnvironmentVariables();
 
-  // Initialize telemetry after env vars are applied so OTEL endpoint env vars and
-  // otelHeadersHelper (which requires trust to execute) are available.
-  // Defer to next tick so the OTel dynamic import resolves after first render
-  // instead of during the pre-render microtask queue.
-  setImmediate(() => initializeTelemetryAfterTrust());
   if (await isQualifiedForGrove()) {
     const {
       GroveDialog
@@ -201,21 +198,6 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
     }
   }
 
-  // Check for custom API key
-  // On homespace, ANTHROPIC_API_KEY is preserved in process.env for child
-  // processes but ignored by Claude Code itself (see auth.ts).
-  if (process.env.ANTHROPIC_API_KEY && !isRunningOnHomespace()) {
-    const customApiKeyTruncated = normalizeApiKeyForConfig(process.env.ANTHROPIC_API_KEY);
-    const keyStatus = getCustomApiKeyStatus(customApiKeyTruncated);
-    if (keyStatus === 'new') {
-      const {
-        ApproveApiKey
-      } = await import('./components/ApproveApiKey.js');
-      await showSetupDialog<boolean>(root, done => <ApproveApiKey customApiKeyTruncated={customApiKeyTruncated} onDone={done} />, {
-        onChangeAppState
-      });
-    }
-  }
   if ((permissionMode === 'bypassPermissions' || allowDangerouslySkipPermissions) && !hasSkipDangerousModePermissionPrompt()) {
     const {
       BypassPermissionsModeDialog

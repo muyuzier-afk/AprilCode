@@ -1,4 +1,3 @@
-import { RECOVERY_MACRO } from '../recovery/macroShim.js';
 import type Anthropic from '@anthropic-ai/sdk'
 import type { BetaToolUnion } from '@anthropic-ai/sdk/resources/beta/messages.js'
 import {
@@ -16,7 +15,6 @@ import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from 
 import { getAPIMetadata } from '../services/api/claude.js'
 import { getAnthropicClient } from '../services/api/client.js'
 import { getModelBetas, modelSupportsStructuredOutputs } from './betas.js'
-import { computeFingerprint } from './fingerprint.js'
 import { normalizeModelStringForAPI } from './model/model.js'
 
 type MessageParam = Anthropic.MessageParam
@@ -65,28 +63,9 @@ export type SideQueryOptions = {
 }
 
 /**
- * Extract text from first user message for fingerprint computation.
- */
-function extractFirstUserMessageText(messages: MessageParam[]): string {
-  const firstUserMessage = messages.find(m => m.role === 'user')
-  if (!firstUserMessage) return ''
-
-  const content = firstUserMessage.content
-  if (typeof content === 'string') return content
-
-  // Array of content blocks - find first text block
-  const textBlock = content.find(block => block.type === 'text')
-  return textBlock?.type === 'text' ? textBlock.text : ''
-}
-
-/**
  * Lightweight API wrapper for "side queries" outside the main conversation loop.
  *
- * Use this instead of direct client.beta.messages.create() calls to ensure
- * proper OAuth token validation with fingerprint attribution headers.
- *
  * This handles:
- * - Fingerprint computation for OAuth validation
  * - Attribution header injection
  * - CLI system prompt prefix
  * - Proper betas for the model
@@ -136,13 +115,7 @@ export async function sideQuery(opts: SideQueryOptions): Promise<BetaMessage> {
   ) {
     betas.push(STRUCTURED_OUTPUTS_BETA_HEADER)
   }
-
-  // Extract first user message text for fingerprint
-  const messageText = extractFirstUserMessageText(messages)
-
-  // Compute fingerprint for OAuth attribution
-  const fingerprint = computeFingerprint(messageText, RECOVERY_MACRO.VERSION)
-  const attributionHeader = getAttributionHeader(fingerprint)
+  const attributionHeader = getAttributionHeader('')
 
   // Build system as array to keep attribution header in its own block
   // (prevents server-side parsing from including system content in cc_entrypoint)

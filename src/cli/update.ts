@@ -239,7 +239,7 @@ export async function update() {
 
       if (result.latestVersion === RECOVERY_MACRO.VERSION) {
         writeToStdout(
-          chalk.green(`Claude Code is up to date (${RECOVERY_MACRO.VERSION})`) + '\n',
+          chalk.green(`April Code is up to date (${RECOVERY_MACRO.VERSION})`) + '\n',
         )
       } else {
         writeToStdout(
@@ -309,7 +309,7 @@ export async function update() {
   // Check if versions match exactly, including any build metadata (like SHA)
   if (latestVersion === RECOVERY_MACRO.VERSION) {
     writeToStdout(
-      chalk.green(`Claude Code is up to date (${RECOVERY_MACRO.VERSION})`) + '\n',
+      chalk.green(`April Code is up to date (${RECOVERY_MACRO.VERSION})`) + '\n',
     )
     await gracefulShutdown(0)
   }
@@ -387,7 +387,7 @@ export async function update() {
       if (useLocalUpdate) {
         process.stderr.write('Try manually updating with:\n')
         process.stderr.write(
-          `  cd ~/.claude/local && npm update ${RECOVERY_MACRO.PACKAGE_URL}\n`,
+          `  cd ~/.april/local && npm update ${RECOVERY_MACRO.PACKAGE_URL}\n`,
         )
       } else {
         process.stderr.write('Try running with sudo or fix npm permissions\n')
@@ -402,7 +402,7 @@ export async function update() {
       if (useLocalUpdate) {
         process.stderr.write('Try manually updating with:\n')
         process.stderr.write(
-          `  cd ~/.claude/local && npm update ${RECOVERY_MACRO.PACKAGE_URL}\n`,
+          `  cd ~/.april/local && npm update ${RECOVERY_MACRO.PACKAGE_URL}\n`,
         )
       } else {
         process.stderr.write(

@@ -89,7 +89,7 @@ const apiKeyConflictNotice: StatusNoticeDefinition = {
     return <Box flexDirection="row" marginTop={1}>
         <Text color="warning">{figures.warning}</Text>
         <Text color="warning">
-          Auth conflict: Using {apiKeySource} instead of Anthropic Console key.
+          Auth conflict: Using {apiKeySource} instead of the console key.
           Either unset {apiKeySource}, or run `claude /logout`.
         </Text>
       </Box>;

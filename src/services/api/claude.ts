@@ -70,7 +70,6 @@ import {
 import { resolveAppliedEffort } from '../../utils/effort.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
 import { errorMessage } from '../../utils/errors.js'
-import { computeFingerprintFromMessages } from '../../utils/fingerprint.js'
 import { captureAPIRequest, logError } from '../../utils/log.js'
 import {
   createAssistantAPIErrorMessage,
@@ -519,9 +518,6 @@ export function getAPIMetadata() {
   return {
     user_id: jsonStringify({
       ...extra,
-      device_id: getOrCreateUserID(),
-      // Only include OAuth account UUID when actively using OAuth authentication
-      account_uuid: getOauthAccountInfo()?.accountUuid ?? '',
       session_id: getSessionId(),
     }),
   }
@@ -533,6 +529,12 @@ export async function verifyApiKey(
 ): Promise<boolean> {
   // Skip API verification if running in print mode (isNonInteractiveSession)
   if (isNonInteractiveSession) {
+    return true
+  }
+
+  const provider = getAPIProvider()
+
+  if (provider !== 'openai' && !isFirstPartyAnthropicBaseUrl()) {
     return true
   }
 
@@ -575,9 +577,15 @@ export async function verifyApiKey(
     // Check for authentication error
     if (
       error instanceof Error &&
-      error.message.includes(
-        '{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}',
-      )
+      [
+        'invalid x-api-key',
+        'authentication_error',
+        'invalid_api_key',
+        'invalid api key',
+        'incorrect api key',
+        'unauthorized',
+        'forbidden',
+      ].some(fragment => error.message.toLowerCase().includes(fragment))
     ) {
       return false
     }
@@ -1256,7 +1264,7 @@ async function* queryModel(
 
   queryCheckpoint('query_tool_schema_build_end')
 
-  // Normalize messages before building system prompt (needed for fingerprinting)
+  // Normalize messages before building system prompt.
   // Instrumentation: Track message count before normalization
   logEvent('tengu_api_before_normalize', {
     preNormalizedMessageCount: messages.length,
@@ -1319,11 +1327,6 @@ async function* queryModel(
     postNormalizedMessageCount: messagesForAPI.length,
   })
 
-  // Compute fingerprint from first user message for attribution.
-  // Must run BEFORE injecting synthetic messages (e.g. deferred tool names)
-  // so the fingerprint reflects the actual user input.
-  const fingerprint = computeFingerprintFromMessages(messagesForAPI)
-
   // When the delta attachment is enabled, deferred tools are announced
   // via persisted deferred_tools_delta attachments instead of this
   // ephemeral prepend (which busts cache whenever the pool changes).
@@ -1357,7 +1360,7 @@ async function* queryModel(
   // filter(Boolean) works by converting each element to a boolean - empty strings become false and are filtered out.
   systemPrompt = asSystemPrompt(
     [
-      getAttributionHeader(fingerprint),
+      getAttributionHeader(''),
       getCLISyspromptPrefix({
         isNonInteractive: options.isNonInteractiveSession,
         hasAppendSystemPrompt: options.hasAppendSystemPrompt,
@@ -3293,7 +3296,7 @@ export async function queryHaiku({
 type QueryWithModelOptions = Omit<Options, 'getToolPermissionContext'>
 
 /**
- * Query a specific model through the Claude Code infrastructure.
+ * Query a specific model through the April Code infrastructure.
  * This goes through the full query pipeline including proper authentication,
  * betas, and headers - unlike direct API calls.
  */

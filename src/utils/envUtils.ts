@@ -1,16 +1,108 @@
 import memoize from 'lodash-es/memoize.js'
 import { homedir } from 'os'
 import { join } from 'path'
+import { getFsImplementation } from './fsOperations.js'
 
-// Memoized: 150+ callers, many on hot paths. Keyed off CLAUDE_CONFIG_DIR so
-// tests that change the env var get a fresh value without explicit cache.clear.
-export const getClaudeConfigHomeDir = memoize(
+const DEFAULT_APRIL_CONFIG_DIRNAME = '.april'
+const DEFAULT_LEGACY_CLAUDE_CONFIG_DIRNAME = '.claude'
+
+function getConfigDirCacheKey(): string {
+  return [
+    process.env.APRIL_CONFIG_DIR ?? '',
+    process.env.CLAUDE_CONFIG_DIR ?? '',
+  ].join('\0')
+}
+
+function shouldUseLegacyConfigDirOverride(): boolean {
+  return !process.env.APRIL_CONFIG_DIR && Boolean(process.env.CLAUDE_CONFIG_DIR)
+}
+
+function getPreferredAprilConfigHomeDir(): string {
+  return (
+    process.env.APRIL_CONFIG_DIR ||
+    process.env.CLAUDE_CONFIG_DIR ||
+    join(homedir(), DEFAULT_APRIL_CONFIG_DIRNAME)
+  ).normalize('NFC')
+}
+
+export const getLegacyClaudeConfigHomeDir = memoize(
+  (): string => join(homedir(), DEFAULT_LEGACY_CLAUDE_CONFIG_DIRNAME).normalize('NFC'),
+  getConfigDirCacheKey,
+)
+
+function mergeLegacyDirectoryIntoActiveDir(
+  sourceDir: string,
+  targetDir: string,
+): void {
+  const fs = getFsImplementation()
+
+  if (!fs.existsSync(sourceDir)) {
+    return
+  }
+
+  fs.mkdirSync(targetDir)
+
+  for (const entry of fs.readdirSync(sourceDir)) {
+    const sourcePath = join(sourceDir, entry.name)
+    const targetPath = join(targetDir, entry.name)
+
+    if (entry.isDirectory()) {
+      mergeLegacyDirectoryIntoActiveDir(sourcePath, targetPath)
+      continue
+    }
+
+    if (fs.existsSync(targetPath)) {
+      continue
+    }
+
+    if (entry.isSymbolicLink()) {
+      try {
+        fs.symlinkSync(fs.readlinkSync(sourcePath), targetPath)
+      } catch {
+        // Best-effort migration. If the symlink can't be recreated, leave it behind.
+      }
+      continue
+    }
+
+    try {
+      fs.copyFileSync(sourcePath, targetPath)
+    } catch {
+      // Best-effort migration for legacy user data.
+    }
+  }
+}
+
+const ensureAprilConfigHomeDirMigration = memoize(
   (): string => {
-    return (
-      process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude')
-    ).normalize('NFC')
+    const activeDir = getPreferredAprilConfigHomeDir()
+    if (shouldUseLegacyConfigDirOverride()) {
+      return activeDir
+    }
+
+    const fs = getFsImplementation()
+    if (fs.existsSync(activeDir)) {
+      return activeDir
+    }
+
+    const legacyDir = getLegacyClaudeConfigHomeDir()
+    if (activeDir === legacyDir) {
+      return activeDir
+    }
+
+    if (fs.existsSync(legacyDir)) {
+      mergeLegacyDirectoryIntoActiveDir(legacyDir, activeDir)
+    }
+
+    return activeDir
   },
-  () => process.env.CLAUDE_CONFIG_DIR,
+  getConfigDirCacheKey,
+)
+
+// Memoized: 150+ callers, many on hot paths. Keyed off APRIL/CLAUDE config dir
+// env vars so tests that change them get a fresh value without explicit clear.
+export const getClaudeConfigHomeDir = memoize(
+  (): string => ensureAprilConfigHomeDirMigration(),
+  getConfigDirCacheKey,
 )
 
 export function getTeamsDir(): string {
@@ -123,7 +215,7 @@ export function isRunningOnHomespace(): boolean {
 }
 
 /**
- * Conservative check for whether Claude Code is running inside a protected
+ * Conservative check for whether April Code is running inside a protected
  * (privileged or ASL3+) COO namespace or cluster.
  *
  * Conservative means: when signals are ambiguous, assume protected. We would

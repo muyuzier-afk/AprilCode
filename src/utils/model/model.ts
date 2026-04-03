@@ -34,7 +34,12 @@ export type ModelName = string
 export type ModelSetting = ModelName | ModelAlias | null
 
 export function getSmallFastModel(): ModelName {
-  return process.env.ANTHROPIC_SMALL_FAST_MODEL || getDefaultHaikuModel()
+  return (
+    process.env.APRIL_MODEL ||
+    process.env.ANTHROPIC_MODEL ||
+    process.env.ANTHROPIC_SMALL_FAST_MODEL ||
+    getDefaultHaikuModel()
+  )
 }
 
 export function isNonCustomOpusModel(model: ModelName): boolean {
@@ -66,11 +71,23 @@ export function getUserSpecifiedModelSetting(): ModelSetting | undefined {
     specifiedModel = modelOverride
   } else {
     const settings = getSettings_DEPRECATED() || {}
-    specifiedModel = process.env.ANTHROPIC_MODEL || settings.model || undefined
+    specifiedModel =
+      process.env.APRIL_MODEL ||
+      process.env.ANTHROPIC_MODEL ||
+      settings.model ||
+      undefined
   }
 
   // Ignore the user-specified model if it's not in the availableModels allowlist.
   if (specifiedModel && !isModelAllowed(specifiedModel)) {
+    if (
+      specifiedModel === process.env.APRIL_MODEL ||
+      specifiedModel === process.env.ANTHROPIC_MODEL ||
+      process.env.APRIL_BASE_URL ||
+      process.env.ANTHROPIC_BASE_URL
+    ) {
+      return specifiedModel
+    }
     return undefined
   }
 
@@ -103,6 +120,9 @@ export function getBestModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Opus model (3P providers may lag so keep defaults unchanged).
 export function getDefaultOpusModel(): ModelName {
+  if (process.env.APRIL_MODEL || process.env.ANTHROPIC_MODEL) {
+    return process.env.APRIL_MODEL || process.env.ANTHROPIC_MODEL!
+  }
   if (process.env.ANTHROPIC_DEFAULT_OPUS_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_OPUS_MODEL
   }
@@ -117,6 +137,9 @@ export function getDefaultOpusModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Sonnet model (3P providers may lag so keep defaults unchanged).
 export function getDefaultSonnetModel(): ModelName {
+  if (process.env.APRIL_MODEL || process.env.ANTHROPIC_MODEL) {
+    return process.env.APRIL_MODEL || process.env.ANTHROPIC_MODEL!
+  }
   if (process.env.ANTHROPIC_DEFAULT_SONNET_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_SONNET_MODEL
   }
@@ -129,6 +152,9 @@ export function getDefaultSonnetModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Haiku model (3P providers may lag so keep defaults unchanged).
 export function getDefaultHaikuModel(): ModelName {
+  if (process.env.APRIL_MODEL || process.env.ANTHROPIC_MODEL) {
+    return process.env.APRIL_MODEL || process.env.ANTHROPIC_MODEL!
+  }
   if (process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL
   }

@@ -31,9 +31,9 @@ import { getUserBinDir, getXDGDataHome } from '../xdg.js'
 import { DEEP_LINK_PROTOCOL } from './parseDeepLink.js'
 
 export const MACOS_BUNDLE_ID = 'com.anthropic.claude-code-url-handler'
-const APP_NAME = 'Claude Code URL Handler'
+const APP_NAME = 'April Code URL Handler'
 const DESKTOP_FILE_NAME = 'claude-code-url-handler.desktop'
-const MACOS_APP_NAME = 'Claude Code URL Handler.app'
+const MACOS_APP_NAME = 'April Code URL Handler.app'
 
 // Shared between register* (writes these paths/values) and
 // isProtocolHandlerCurrent (reads them back). Keep the writer and reader
@@ -108,7 +108,7 @@ async function registerMacos(claudePath: string): Promise<void> {
   <array>
     <dict>
       <key>CFBundleURLName</key>
-      <string>Claude Code Deep Link</string>
+      <string>April Code Deep Link</string>
       <key>CFBundleURLSchemes</key>
       <array>
         <string>${DEEP_LINK_PROTOCOL}</string>
@@ -146,7 +146,7 @@ async function registerLinux(claudePath: string): Promise<void> {
 
   const desktopEntry = `[Desktop Entry]
 Name=${APP_NAME}
-Comment=Handle ${DEEP_LINK_PROTOCOL}:// deep links for Claude Code
+Comment=Handle ${DEEP_LINK_PROTOCOL}:// deep links for April Code
 ${linuxExecLine(claudePath)}
 Type=Application
 NoDisplay=true
@@ -253,7 +253,7 @@ async function resolveClaudePath(): Promise<string> {
  * Check whether the OS-level protocol handler is already registered AND
  * points at the expected `claude` binary. Reads the registration artifact
  * directly (symlink target, .desktop Exec line, registry value) rather than
- * a cached flag in ~/.claude.json, so:
+ * a cached flag in ~/.april/.config.json, so:
  *   - the check is per-machine (config can sync across machines; OS state can't)
  *   - stale paths self-heal (install-method change → re-register next session)
  *   - deleted artifacts self-heal
@@ -311,7 +311,7 @@ export async function ensureDeepLinkProtocolRegistered(): Promise<void> {
   // EACCES/ENOSPC are deterministic — retrying next session won't help.
   // Throttle to once per 24h so a read-only ~/.local/share/applications
   // doesn't generate a failure event on every startup. Marker lives in
-  // ~/.claude (per-machine, not synced) rather than ~/.claude.json (can sync).
+  // ~/.april (per-machine, not synced) rather than ~/.april/.config.json (can sync).
   const failureMarkerPath = path.join(
     getClaudeConfigHomeDir(),
     '.deep-link-register-failed',

@@ -191,7 +191,7 @@ export function AutoUpdater({
       {(autoUpdaterResult?.status === 'install_failed' || autoUpdaterResult?.status === 'no_permissions') && <Text color="error" wrap="truncate">
           ✗ Auto-update failed &middot; Try <Text bold>claude doctor</Text> or{' '}
           <Text bold>
-            {hasLocalInstall ? `cd ~/.claude/local && npm update ${RECOVERY_MACRO.PACKAGE_URL}` : `npm i -g ${RECOVERY_MACRO.PACKAGE_URL}`}
+            {hasLocalInstall ? `cd ~/.april/local && npm update ${RECOVERY_MACRO.PACKAGE_URL}` : `npm i -g ${RECOVERY_MACRO.PACKAGE_URL}`}
           </Text>
         </Text>}
     </Box>;

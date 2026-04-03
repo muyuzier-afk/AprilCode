@@ -3,6 +3,7 @@ import { c as _c } from "react/compiler-runtime";
 // biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
 import * as React from 'react';
 import { Box, Text, color } from '../../ink.js';
+import { getUiText } from '../../i18n/ui.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
 import { stringWidth } from '../../ink/stringWidth.js';
 import { getLayoutMode, calculateLayoutDimensions, calculateOptimalLeftWidth, formatWelcomeMessage, truncatePath, getRecentActivitySync, getRecentReleaseNotesSync, getLogoDisplayData } from '../../utils/logoV2Utils.js';
@@ -190,9 +191,17 @@ export function LogoV2() {
       t12 = <VoiceModeNotice />;
       t13 = <Opus1mMergeNotice />;
       t14 = ChannelsNoticeModule && <ChannelsNoticeModule.ChannelsNotice />;
-      t15 = isDebugMode() && <Box paddingLeft={2} flexDirection="column"><Text color="warning">Debug mode enabled</Text><Text dimColor={true}>Logging to: {isDebugToStdErr() ? "stderr" : getDebugLogPath()}</Text></Box>;
+      t15 = isDebugMode() && <Box paddingLeft={2} flexDirection="column"><Text color="warning">{getUiText('debugModeEnabled')}</Text><Text dimColor={true}>{getUiText('loggingTo', {
+        target: isDebugToStdErr() ? 'stderr' : getDebugLogPath()
+      })}</Text></Box>;
       t16 = <EmergencyTip />;
-      t17 = process.env.CLAUDE_CODE_TMUX_SESSION && <Box paddingLeft={2} flexDirection="column"><Text dimColor={true}>tmux session: {process.env.CLAUDE_CODE_TMUX_SESSION}</Text><Text dimColor={true}>{process.env.CLAUDE_CODE_TMUX_PREFIX_CONFLICTS ? `Detach: ${process.env.CLAUDE_CODE_TMUX_PREFIX} ${process.env.CLAUDE_CODE_TMUX_PREFIX} d (press prefix twice - Claude uses ${process.env.CLAUDE_CODE_TMUX_PREFIX})` : `Detach: ${process.env.CLAUDE_CODE_TMUX_PREFIX} d`}</Text></Box>;
+      t17 = process.env.CLAUDE_CODE_TMUX_SESSION && <Box paddingLeft={2} flexDirection="column"><Text dimColor={true}>{getUiText('tmuxSession', {
+        session: process.env.CLAUDE_CODE_TMUX_SESSION
+      })}</Text><Text dimColor={true}>{process.env.CLAUDE_CODE_TMUX_PREFIX_CONFLICTS ? getUiText('tmuxDetachConflict', {
+        prefix: process.env.CLAUDE_CODE_TMUX_PREFIX ?? ''
+      }) : getUiText('tmuxDetach', {
+        prefix: process.env.CLAUDE_CODE_TMUX_PREFIX ?? ''
+      })}</Text></Box>;
       $[15] = t11;
       $[16] = t12;
       $[17] = t13;
@@ -211,7 +220,9 @@ export function LogoV2() {
     }
     let t18;
     if ($[22] !== announcement || $[23] !== config) {
-      t18 = announcement && <Box paddingLeft={2} flexDirection="column">{!process.env.IS_DEMO && config.oauthAccount?.organizationName && <Text dimColor={true}>Message from {config.oauthAccount.organizationName}:</Text>}<Text>{announcement}</Text></Box>;
+      t18 = announcement && <Box paddingLeft={2} flexDirection="column">{!process.env.IS_DEMO && config.oauthAccount?.organizationName && <Text dimColor={true}>{getUiText('messageFrom', {
+        organization: config.oauthAccount.organizationName
+      })}</Text>}<Text>{announcement}</Text></Box>;
       $[22] = announcement;
       $[23] = config;
       $[24] = t18;
@@ -223,8 +234,14 @@ export function LogoV2() {
     let t21;
     let t22;
     if ($[25] === Symbol.for("react.memo_cache_sentinel")) {
-      t19 = false && !process.env.DEMO_VERSION && <Box paddingLeft={2} flexDirection="column"><Text dimColor={true}>Use /issue to report model behavior issues</Text></Box>;
-      t20 = false && !process.env.DEMO_VERSION && <Box paddingLeft={2} flexDirection="column"><Text color="warning">[ANT-ONLY] Logs:</Text><Text dimColor={true}>API calls: {getDisplayPath(getDumpPromptsPath())}</Text><Text dimColor={true}>Debug logs: {getDisplayPath(getDebugLogPath())}</Text>{isDetailedProfilingEnabled() && <Text dimColor={true}>Startup Perf: {getDisplayPath(getStartupPerfLogPath())}</Text>}</Box>;
+      t19 = false && !process.env.DEMO_VERSION && <Box paddingLeft={2} flexDirection="column"><Text dimColor={true}>{getUiText('issueReportHint')}</Text></Box>;
+      t20 = false && !process.env.DEMO_VERSION && <Box paddingLeft={2} flexDirection="column"><Text color="warning">{getUiText('antLogsTitle')}</Text><Text dimColor={true}>{getUiText('antLogsApiCalls', {
+        path: getDisplayPath(getDumpPromptsPath())
+      })}</Text><Text dimColor={true}>{getUiText('antLogsDebugLogs', {
+        path: getDisplayPath(getDebugLogPath())
+      })}</Text>{isDetailedProfilingEnabled() && <Text dimColor={true}>{getUiText('antLogsStartupPerf', {
+        path: getDisplayPath(getStartupPerfLogPath())
+      })}</Text>}</Box>;
       t21 = false && <GateOverridesWarning />;
       t22 = false && <ExperimentEnrollmentNotice />;
       $[25] = t19;
@@ -310,7 +327,7 @@ export function LogoV2() {
     }
     let t17;
     if ($[40] !== showSandboxStatus) {
-      t17 = showSandboxStatus && <Box marginTop={1} flexDirection="column"><Text color="warning">Your bash commands will be sandboxed. Disable with /sandbox.</Text></Box>;
+      t17 = showSandboxStatus && <Box marginTop={1} flexDirection="column"><Text color="warning">{getUiText('sandboxWarning')}</Text></Box>;
       $[40] = showSandboxStatus;
       $[41] = t17;
     } else {
@@ -461,9 +478,17 @@ export function LogoV2() {
     t29 = <VoiceModeNotice />;
     t30 = <Opus1mMergeNotice />;
     t31 = ChannelsNoticeModule && <ChannelsNoticeModule.ChannelsNotice />;
-    t32 = isDebugMode() && <Box paddingLeft={2} flexDirection="column"><Text color="warning">Debug mode enabled</Text><Text dimColor={true}>Logging to: {isDebugToStdErr() ? "stderr" : getDebugLogPath()}</Text></Box>;
+    t32 = isDebugMode() && <Box paddingLeft={2} flexDirection="column"><Text color="warning">{getUiText('debugModeEnabled')}</Text><Text dimColor={true}>{getUiText('loggingTo', {
+      target: isDebugToStdErr() ? 'stderr' : getDebugLogPath()
+    })}</Text></Box>;
     t33 = <EmergencyTip />;
-    t34 = process.env.CLAUDE_CODE_TMUX_SESSION && <Box paddingLeft={2} flexDirection="column"><Text dimColor={true}>tmux session: {process.env.CLAUDE_CODE_TMUX_SESSION}</Text><Text dimColor={true}>{process.env.CLAUDE_CODE_TMUX_PREFIX_CONFLICTS ? `Detach: ${process.env.CLAUDE_CODE_TMUX_PREFIX} ${process.env.CLAUDE_CODE_TMUX_PREFIX} d (press prefix twice - Claude uses ${process.env.CLAUDE_CODE_TMUX_PREFIX})` : `Detach: ${process.env.CLAUDE_CODE_TMUX_PREFIX} d`}</Text></Box>;
+    t34 = process.env.CLAUDE_CODE_TMUX_SESSION && <Box paddingLeft={2} flexDirection="column"><Text dimColor={true}>{getUiText('tmuxSession', {
+      session: process.env.CLAUDE_CODE_TMUX_SESSION
+    })}</Text><Text dimColor={true}>{process.env.CLAUDE_CODE_TMUX_PREFIX_CONFLICTS ? getUiText('tmuxDetachConflict', {
+      prefix: process.env.CLAUDE_CODE_TMUX_PREFIX ?? ''
+    }) : getUiText('tmuxDetach', {
+      prefix: process.env.CLAUDE_CODE_TMUX_PREFIX ?? ''
+    })}</Text></Box>;
     $[75] = t29;
     $[76] = t30;
     $[77] = t31;
@@ -480,7 +505,9 @@ export function LogoV2() {
   }
   let t35;
   if ($[81] !== announcement || $[82] !== config) {
-    t35 = announcement && <Box paddingLeft={2} flexDirection="column">{!process.env.IS_DEMO && config.oauthAccount?.organizationName && <Text dimColor={true}>Message from {config.oauthAccount.organizationName}:</Text>}<Text>{announcement}</Text></Box>;
+    t35 = announcement && <Box paddingLeft={2} flexDirection="column">{!process.env.IS_DEMO && config.oauthAccount?.organizationName && <Text dimColor={true}>{getUiText('messageFrom', {
+      organization: config.oauthAccount.organizationName
+    })}</Text>}<Text>{announcement}</Text></Box>;
     $[81] = announcement;
     $[82] = config;
     $[83] = t35;
@@ -489,7 +516,7 @@ export function LogoV2() {
   }
   let t36;
   if ($[84] !== showSandboxStatus) {
-    t36 = showSandboxStatus && <Box paddingLeft={2} flexDirection="column"><Text color="warning">Your bash commands will be sandboxed. Disable with /sandbox.</Text></Box>;
+      t36 = showSandboxStatus && <Box paddingLeft={2} flexDirection="column"><Text color="warning">{getUiText('sandboxWarning')}</Text></Box>;
     $[84] = showSandboxStatus;
     $[85] = t36;
   } else {
@@ -500,8 +527,14 @@ export function LogoV2() {
   let t39;
   let t40;
   if ($[86] === Symbol.for("react.memo_cache_sentinel")) {
-    t37 = false && !process.env.DEMO_VERSION && <Box paddingLeft={2} flexDirection="column"><Text dimColor={true}>Use /issue to report model behavior issues</Text></Box>;
-    t38 = false && !process.env.DEMO_VERSION && <Box paddingLeft={2} flexDirection="column"><Text color="warning">[ANT-ONLY] Logs:</Text><Text dimColor={true}>API calls: {getDisplayPath(getDumpPromptsPath())}</Text><Text dimColor={true}>Debug logs: {getDisplayPath(getDebugLogPath())}</Text>{isDetailedProfilingEnabled() && <Text dimColor={true}>Startup Perf: {getDisplayPath(getStartupPerfLogPath())}</Text>}</Box>;
+    t37 = false && !process.env.DEMO_VERSION && <Box paddingLeft={2} flexDirection="column"><Text dimColor={true}>{getUiText('issueReportHint')}</Text></Box>;
+    t38 = false && !process.env.DEMO_VERSION && <Box paddingLeft={2} flexDirection="column"><Text color="warning">{getUiText('antLogsTitle')}</Text><Text dimColor={true}>{getUiText('antLogsApiCalls', {
+      path: getDisplayPath(getDumpPromptsPath())
+    })}</Text><Text dimColor={true}>{getUiText('antLogsDebugLogs', {
+      path: getDisplayPath(getDebugLogPath())
+    })}</Text>{isDetailedProfilingEnabled() && <Text dimColor={true}>{getUiText('antLogsStartupPerf', {
+      path: getDisplayPath(getStartupPerfLogPath())
+    })}</Text>}</Box>;
     t39 = false && <GateOverridesWarning />;
     t40 = false && <ExperimentEnrollmentNotice />;
     $[86] = t37;

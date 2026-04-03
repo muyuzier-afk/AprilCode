@@ -1,5 +1,6 @@
 import { c as _c } from "react/compiler-runtime";
 import React, { useCallback, useEffect, useState } from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import { type OptionWithDescription, Select } from '../../components/CustomSelect/index.js';
 import { Pane } from '../../components/design-system/Pane.js';
 import { Spinner } from '../../components/Spinner.js';
@@ -341,7 +342,9 @@ export function It2SetupPrompt(t0) {
   }
   let t15;
   if ($[29] !== exitState || $[30] !== step) {
-    t15 = step !== "installing" && step !== "verifying" && step !== "success" && <Text dimColor={true} italic={true}>{exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>Esc to cancel</>}</Text>;
+    t15 = step !== "installing" && step !== "verifying" && step !== "success" && <Text dimColor={true} italic={true}>{exitState.pending ? <>{getUiText('pressAgainToExitPlain', {
+      key: exitState.keyName
+    })}</> : <>{getUiText('escToCancel')}</>}</Text>;
     $[29] = exitState;
     $[30] = step;
     $[31] = t15;

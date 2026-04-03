@@ -1,15 +1,18 @@
+import { getUiLanguage } from '../i18n/ui.js'
 import { getInitialSettings } from '../utils/settings/settings.js'
 
 export function getSpinnerVerbs(): string[] {
   const settings = getInitialSettings()
   const config = settings.spinnerVerbs
+  const defaultVerbs =
+    getUiLanguage() === 'zh-CN' ? SPINNER_VERBS_ZH_CN : SPINNER_VERBS
   if (!config) {
-    return SPINNER_VERBS
+    return defaultVerbs
   }
   if (config.mode === 'replace') {
-    return config.verbs.length > 0 ? config.verbs : SPINNER_VERBS
+    return config.verbs.length > 0 ? config.verbs : defaultVerbs
   }
-  return [...SPINNER_VERBS, ...config.verbs]
+  return [...defaultVerbs, ...config.verbs]
 }
 
 // Spinner verbs for loading messages
@@ -201,4 +204,27 @@ export const SPINNER_VERBS = [
   'Wrangling',
   'Zesting',
   'Zigzagging',
+]
+
+export const SPINNER_VERBS_ZH_CN = [
+  '分析中',
+  '处理中',
+  '整理中',
+  '思考中',
+  '推演中',
+  '规划中',
+  '构建中',
+  '生成中',
+  '编写中',
+  '检查中',
+  '斟酌中',
+  '对齐中',
+  '归纳中',
+  '搜索中',
+  '定位中',
+  '追踪中',
+  '串联中',
+  '优化中',
+  '润色中',
+  '收束中',
 ]

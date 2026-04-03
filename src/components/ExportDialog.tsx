@@ -1,5 +1,6 @@
 import { join } from 'path';
 import React, { useCallback, useState } from 'react';
+import { getUiText } from '../i18n/ui.js';
 import type { ExitState } from '../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { setClipboard } from '../ink/termio/osc.js';
@@ -105,7 +106,9 @@ export function ExportDialog({
         </Byline>;
     }
     if (exitState.pending) {
-      return <Text>Press {exitState.keyName} again to exit</Text>;
+      return <Text>{getUiText('pressAgainToExitPlain', {
+        key: exitState.keyName
+      })}</Text>;
     }
     return <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="cancel" />;
   }

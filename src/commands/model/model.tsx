@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import * as React from 'react';
 import type { CommandResultDisplay } from '../../commands.js';
 import { ModelPicker } from '../../components/ModelPicker.js';
+import { getUiText } from '../../i18n/ui.js';
 import { COMMON_HELP_ARGS, COMMON_INFO_ARGS } from '../../constants/xml.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from '../../services/analytics/index.js';
 import { useAppState, useSetAppState } from '../../state/AppState.js';
@@ -67,16 +68,16 @@ function ModelPickerWrapper(t0) {
           wasFastModeToggledOn = false;
         } else {
           if (isFastModeSupportedByModel(model) && isFastModeAvailable() && isFastMode) {
-            message = message + " \xB7 Fast mode ON";
+            message = message + ` \xB7 ${getUiText('fastModeResultOn')}`;
             wasFastModeToggledOn = true;
           }
         }
       }
       if (isBilledAsExtraUsage(model, wasFastModeToggledOn === true, isOpus1mMergeEnabled())) {
-        message = message + " \xB7 Billed as extra usage";
+        message = message + ` \xB7 ${getUiText('billedAsExtraUsage')}`;
       }
       if (wasFastModeToggledOn === false) {
-        message = message + " \xB7 Fast mode OFF";
+        message = message + ` \xB7 ${getUiText('fastModeResultOff')}`;
       }
       onDone(message);
     };
@@ -213,16 +214,16 @@ function SetModelAndClose({
           wasFastModeToggledOn = false;
           // Do not update fast mode in settings since this is an automatic downgrade
         } else if (isFastModeSupportedByModel(modelValue) && isFastMode) {
-          message += ` · Fast mode ON`;
+          message += ` · ${getUiText('fastModeResultOn')}`;
           wasFastModeToggledOn = true;
         }
       }
       if (isBilledAsExtraUsage(modelValue, wasFastModeToggledOn === true, isOpus1mMergeEnabled())) {
-        message += ` · Billed as extra usage`;
+        message += ` · ${getUiText('billedAsExtraUsage')}`;
       }
       if (wasFastModeToggledOn === false) {
         // Fast mode was toggled off, show suffix after extra usage billing
-        message += ` · Fast mode OFF`;
+        message += ` · ${getUiText('fastModeResultOff')}`;
       }
       onDone(message);
     }

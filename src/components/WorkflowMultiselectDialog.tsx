@@ -1,5 +1,6 @@
 import { c as _c } from "react/compiler-runtime";
 import React, { useCallback, useState } from 'react';
+import { getUiText } from '../i18n/ui.js';
 import type { Workflow } from '../commands/install-github-app/types.js';
 import type { ExitState } from '../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { Box, Link, Text } from '../ink.js';
@@ -25,7 +26,9 @@ const WORKFLOWS: WorkflowOption[] = [{
 }];
 function renderInputGuide(exitState: ExitState): React.ReactNode {
   if (exitState.pending) {
-    return <Text>Press {exitState.keyName} again to exit</Text>;
+    return <Text>{getUiText('pressAgainToExitPlain', {
+      key: exitState.keyName
+    })}</Text>;
   }
   return <Byline>
       <KeyboardShortcutHint shortcut="↑↓" action="navigate" />

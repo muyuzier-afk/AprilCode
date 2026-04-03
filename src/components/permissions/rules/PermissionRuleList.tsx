@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import figures from 'figures';
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getUiText } from '../../../i18n/ui.js';
 import { useAppState, useSetAppState } from '../../../state/AppState.js';
 import { applyPermissionUpdate, persistPermissionUpdate } from '../../../utils/permissions/PermissionUpdate.js';
 import type { PermissionUpdateDestination } from '../../../utils/permissions/PermissionUpdateSchema.js';
@@ -135,7 +136,9 @@ function RuleDetails(t0) {
   const ruleDescription = t6;
   let t7;
   if ($[13] !== exitState.keyName || $[14] !== exitState.pending) {
-    t7 = <Box marginLeft={3}>{exitState.pending ? <Text dimColor={true}>Press {exitState.keyName} again to exit</Text> : <Text dimColor={true}>Esc to cancel</Text>}</Box>;
+    t7 = <Box marginLeft={3}>{exitState.pending ? <Text dimColor={true}>{getUiText('pressAgainToExitPlain', {
+      key: exitState.keyName
+    })}</Text> : <Text dimColor={true}>{getUiText('permissionEscCancel')}</Text>}</Box>;
     $[13] = exitState.keyName;
     $[14] = exitState.pending;
     $[15] = t7;

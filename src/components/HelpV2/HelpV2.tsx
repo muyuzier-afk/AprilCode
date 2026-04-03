@@ -1,6 +1,7 @@
 import { RECOVERY_MACRO } from '../../recovery/macroShim.js';
 import { c as _c } from "react/compiler-runtime";
 import * as React from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import { useExitOnCtrlCDWithKeybindings } from '../../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { useShortcutDisplay } from '../../keybindings/useShortcutDisplay.js';
 import { builtInCommandNames, type Command, type CommandResultDisplay, INTERNAL_ONLY_COMMANDS } from '../../commands.js';
@@ -147,14 +148,16 @@ export function HelpV2(t0) {
   }
   let t7;
   if ($[33] === Symbol.for("react.memo_cache_sentinel")) {
-    t7 = <Box marginTop={1}><Text>For more help:{" "}<Link url="https://code.claude.com/docs/en/overview" /></Text></Box>;
+    t7 = <Box marginTop={1}><Text>{getUiText('helpForMore')}{" "}<Link url="https://code.claude.com/docs/en/overview" /></Text></Box>;
     $[33] = t7;
   } else {
     t7 = $[33];
   }
   let t8;
   if ($[34] !== dismissShortcut || $[35] !== exitState.keyName || $[36] !== exitState.pending) {
-    t8 = <Box marginTop={1}><Text dimColor={true}>{exitState.pending ? <>Press {exitState.keyName} again to exit</> : <Text italic={true}>{dismissShortcut} to cancel</Text>}</Text></Box>;
+    t8 = <Box marginTop={1}><Text dimColor={true}>{exitState.pending ? <>{getUiText('pressAgainToExitPlain', {
+      key: exitState.keyName
+    })}</> : <Text italic={true}>{dismissShortcut} to cancel</Text>}</Text></Box>;
     $[34] = dismissShortcut;
     $[35] = exitState.keyName;
     $[36] = exitState.pending;

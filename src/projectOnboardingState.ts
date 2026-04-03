@@ -1,5 +1,6 @@
 import memoize from 'lodash-es/memoize.js'
 import { join } from 'path'
+import { getUiText } from './i18n/ui.js'
 import {
   getCurrentProjectConfig,
   saveCurrentProjectConfig,
@@ -25,14 +26,14 @@ export function getSteps(): Step[] {
   return [
     {
       key: 'workspace',
-      text: 'Ask Claude to create a new app or clone a repository',
+      text: getUiText('onboardingStepCreateApp'),
       isComplete: false,
       isCompletable: true,
       isEnabled: isWorkspaceDirEmpty,
     },
     {
       key: 'claudemd',
-      text: 'Run /init to create a CLAUDE.md file with instructions for Claude',
+      text: getUiText('onboardingStepInitClaude'),
       isComplete: hasClaudeMd,
       isCompletable: true,
       isEnabled: !isWorkspaceDirEmpty,

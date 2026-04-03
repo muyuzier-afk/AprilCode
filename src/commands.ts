@@ -5,7 +5,6 @@ import backfillSessions from './commands/backfill-sessions/index.js'
 import btw from './commands/btw/index.js'
 import goodClaude from './commands/good-claude/index.js'
 import issue from './commands/issue/index.js'
-import feedback from './commands/feedback/index.js'
 import clear from './commands/clear/index.js'
 import color from './commands/color/index.js'
 import commit from './commands/commit.js'
@@ -154,6 +153,7 @@ import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
 import { toError } from './utils/errors.js'
 import { logForDebugging } from './utils/debug.js'
+import { getUiLanguage } from './i18n/ui.js'
 import {
   getSkillDirCommands,
   clearSkillCaches,
@@ -254,6 +254,102 @@ export const INTERNAL_ONLY_COMMANDS = [
   autofixPr,
 ].filter(Boolean)
 
+type LocalizedCommandMeta = {
+  description: string
+  argumentHint?: string
+}
+
+const ZH_BUILTIN_COMMAND_META: Record<string, LocalizedCommandMeta> = {
+  'add-dir': { description: '添加新的工作目录', argumentHint: '<路径>' },
+  agents: { description: '管理 agent 配置' },
+  assistant: { description: 'assistant 占位命令（已禁用）' },
+  branch: {
+    description: '从当前对话节点创建一个新分支',
+    argumentHint: '[名称]',
+  },
+  btw: { description: '不中断主对话，快速插入一个旁支问题', argumentHint: '<问题>' },
+  chrome: { description: 'Claude in Chrome（Beta）设置' },
+  clear: { description: '清空对话历史并释放上下文' },
+  color: { description: '设置当前会话的提示栏颜色', argumentHint: '<颜色|default>' },
+  compact: {
+    description:
+      '清空对话历史，但在上下文中保留摘要。可选：/compact [摘要说明]',
+    argumentHint: '<可选的自定义摘要说明>',
+  },
+  config: { description: '打开配置面板' },
+  context: { description: '可视化当前上下文用量' },
+  copy: { description: '复制 Claude 最近一次回复到剪贴板（或用 /copy N 复制倒数第 N 条）' },
+  cost: { description: '显示当前会话总成本和时长' },
+  diff: { description: '查看未提交改动和每轮 diff' },
+  doctor: { description: '诊断并验证 April Code 安装与设置' },
+  effort: { description: '设置模型推理强度', argumentHint: '[low|medium|high|max|auto]' },
+  exit: { description: '退出 REPL' },
+  export: { description: '导出当前对话到文件或剪贴板', argumentHint: '[文件名]' },
+  'extra-usage': { description: '配置额外用量，以便在额度耗尽后继续工作' },
+  fast: { description: '切换 Fast mode', argumentHint: '[on|off]' },
+  files: { description: '列出当前上下文中的所有文件' },
+  help: { description: '显示帮助和可用命令' },
+  hooks: { description: '查看工具事件的 Hook 配置' },
+  ide: { description: '管理 IDE 集成并查看状态', argumentHint: '[open]' },
+  'install-github-app': { description: '为仓库设置 Claude GitHub Actions' },
+  'install-slack-app': { description: '安装 Claude Slack 应用' },
+  keybindings: { description: '打开或创建按键绑定配置文件' },
+  mcp: { description: '管理 MCP 服务器', argumentHint: '[enable|disable [server-name]]' },
+  memory: { description: '编辑 Claude memory 文件' },
+  mobile: { description: '显示二维码以下载 Claude 手机应用' },
+  model: { description: '设置 April Code 使用的 AI 模型', argumentHint: '[model]' },
+  'output-style': { description: '已废弃：请使用 /config 修改输出样式' },
+  passes: { description: '分享 April Code 邀请卡并查看奖励' },
+  permissions: { description: '管理工具权限的允许/拒绝规则' },
+  plan: { description: '启用 plan mode 或查看当前会话计划', argumentHint: '[open|<description>]' },
+  plugin: { description: '管理 April Code 插件' },
+  'pr-comments': { description: '获取 GitHub Pull Request 评论' },
+  'privacy-settings': { description: '查看并更新隐私设置' },
+  'rate-limit-options': { description: '在达到限额时显示可选方案' },
+  'release-notes': { description: '查看发行说明' },
+  'reload-plugins': { description: '在当前会话中激活待生效的插件改动' },
+  'remote-control': { description: '连接当前终端以进行远程控制会话', argumentHint: '[name]' },
+  'remote-env': { description: '配置 teleport 会话的默认远程环境' },
+  rename: { description: '重命名当前对话', argumentHint: '[name]' },
+  resume: { description: '恢复之前的对话', argumentHint: '[conversation id or search term]' },
+  rewind: { description: '将代码和/或对话恢复到之前的某个时间点' },
+  sandbox: { description: '查看并配置沙箱状态', argumentHint: 'exclude "命令模式"' },
+  session: { description: '显示远程会话 URL 和二维码' },
+  skills: { description: '列出可用 skills' },
+  stats: { description: '显示 April Code 使用统计和活动' },
+  status: { description: '显示 April Code 状态，包括版本、模型、账号、API 连通性和工具状态' },
+  statusline: { description: '设置 April Code 状态栏 UI' },
+  stickers: { description: '订购 April Code 贴纸' },
+  tag: { description: '为当前会话切换可搜索标签', argumentHint: '<tag-name>' },
+  'terminal-setup': { description: '为当前终端设置推荐的换行快捷键' },
+  theme: { description: '切换主题' },
+  'think-back': { description: '你的 2025 April Code 年度回顾' },
+  'thinkback-play': { description: '播放 thinkback 动画' },
+  upgrade: { description: '升级到 Max，获得更高限额和更多 Opus 能力' },
+  usage: { description: '显示套餐用量限制' },
+  vim: { description: '在 Vim 与普通编辑模式之间切换' },
+  'web-setup': { description: '在 Web 上设置 April Code（需要连接 GitHub 账号）' },
+}
+
+function localizeBuiltinCommand(cmd: Command): Command {
+  if (getUiLanguage() !== 'zh-CN') {
+    return cmd
+  }
+
+  const localized = ZH_BUILTIN_COMMAND_META[getCommandName(cmd)]
+  if (!localized) {
+    return cmd
+  }
+
+  return {
+    ...cmd,
+    description: localized.description,
+    ...(localized.argumentHint !== undefined
+      ? { argumentHint: localized.argumentHint }
+      : {}),
+  }
+}
+
 // Declared as a function so that we don't run this until getCommands is called,
 // since underlying functions read from config, which can't be read at module initialization time
 const COMMANDS = memoize((): Command[] => [
@@ -305,7 +401,6 @@ const COMMANDS = memoize((): Command[] => [
   stickers,
   tag,
   theme,
-  feedback,
   review,
   ultrareview,
   rewind,
@@ -344,7 +439,7 @@ const COMMANDS = memoize((): Command[] => [
   ...(process.env.USER_TYPE === 'ant' && !process.env.IS_DEMO
     ? INTERNAL_ONLY_COMMANDS
     : []),
-])
+].map(localizeBuiltinCommand))
 
 export const builtInCommandNames = memoize(
   (): Set<string> =>
@@ -629,7 +724,6 @@ export const REMOTE_SAFE_COMMANDS: Set<Command> = new Set([
   usage, // Show usage info
   copy, // Copy last message
   btw, // Quick note
-  feedback, // Send feedback
   plan, // Plan mode toggle
   keybindings, // Keybinding management
   statusline, // Status line toggle
@@ -727,12 +821,14 @@ export function getCommand(commandName: string, commands: Command[]): Command {
  * For model-facing prompts (like SkillTool), use cmd.description directly.
  */
 export function formatDescriptionWithSource(cmd: Command): string {
+  const isZh = getUiLanguage() === 'zh-CN'
+
   if (cmd.type !== 'prompt') {
     return cmd.description
   }
 
   if (cmd.kind === 'workflow') {
-    return `${cmd.description} (workflow)`
+    return isZh ? `${cmd.description}（工作流）` : `${cmd.description} (workflow)`
   }
 
   if (cmd.source === 'plugin') {
@@ -740,7 +836,7 @@ export function formatDescriptionWithSource(cmd: Command): string {
     if (pluginName) {
       return `(${pluginName}) ${cmd.description}`
     }
-    return `${cmd.description} (plugin)`
+    return isZh ? `${cmd.description}（插件）` : `${cmd.description} (plugin)`
   }
 
   if (cmd.source === 'builtin' || cmd.source === 'mcp') {
@@ -748,8 +844,10 @@ export function formatDescriptionWithSource(cmd: Command): string {
   }
 
   if (cmd.source === 'bundled') {
-    return `${cmd.description} (bundled)`
+    return isZh ? `${cmd.description}（内置）` : `${cmd.description} (bundled)`
   }
 
-  return `${cmd.description} (${getSettingSourceName(cmd.source)})`
+  return isZh
+    ? `${cmd.description}（${getSettingSourceName(cmd.source)}）`
+    : `${cmd.description} (${getSettingSourceName(cmd.source)})`
 }

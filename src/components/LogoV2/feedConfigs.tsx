@@ -2,6 +2,7 @@ import figures from 'figures';
 import { homedir } from 'os';
 import * as React from 'react';
 import { Box, Text } from '../../ink.js';
+import { getUiText } from '../../i18n/ui.js';
 import type { Step } from '../../projectOnboardingState.js';
 import { formatCreditAmount, getCachedReferrerReward } from '../../services/api/referral.js';
 import type { LogOption } from '../../types/logs.js';
@@ -18,10 +19,10 @@ export function createRecentActivityFeed(activities: LogOption[]): FeedConfig {
     };
   });
   return {
-    title: 'Recent activity',
+    title: getUiText('recentActivityTitle'),
     lines,
-    footer: lines.length > 0 ? '/resume for more' : undefined,
-    emptyMessage: 'No recent activity'
+    footer: lines.length > 0 ? getUiText('recentActivityFooter') : undefined,
+    emptyMessage: getUiText('recentActivityEmpty')
   };
 }
 export function createWhatsNewFeed(releaseNotes: string[]): FeedConfig {
@@ -39,11 +40,15 @@ export function createWhatsNewFeed(releaseNotes: string[]): FeedConfig {
       text: note
     };
   });
-  const emptyMessage = "external" === 'ant' ? 'Unable to fetch latest claude-cli-internal commits' : 'Check the April Code changelog for updates';
+  const emptyMessage = "external" === 'ant'
+    ? getUiText('whatsNewEmptyAnt')
+    : getUiText('whatsNewEmpty');
   return {
-    title: "external" === 'ant' ? "What's new [ANT-ONLY: Latest CC commits]" : "What's new",
+    title: "external" === 'ant'
+      ? getUiText('whatsNewTitleAnt')
+      : getUiText('whatsNewTitle'),
     lines,
-    footer: lines.length > 0 ? '/release-notes for more' : undefined,
+    footer: lines.length > 0 ? getUiText('whatsNewFooter') : undefined,
     emptyMessage
   };
 }
@@ -60,22 +65,26 @@ export function createProjectOnboardingFeed(steps: Step[]): FeedConfig {
       text: `${checkmark}${text}`
     };
   });
-  const warningText = getCwd() === homedir() ? 'Note: You have launched claude in your home directory. For the best experience, launch it in a project directory instead.' : undefined;
+  const warningText = getCwd() === homedir() ? getUiText('onboardingHomeDirectoryWarning') : undefined;
   if (warningText) {
     lines.push({
       text: warningText
     });
   }
   return {
-    title: 'Tips for getting started',
+    title: getUiText('onboardingTipsTitle'),
     lines
   };
 }
 export function createGuestPassesFeed(): FeedConfig {
   const reward = getCachedReferrerReward();
-  const subtitle = reward ? `Share April Code and earn ${formatCreditAmount(reward)} of extra usage` : 'Share April Code with friends';
+  const subtitle = reward
+    ? getUiText('guestPassesSubtitleWithReward', {
+        reward: formatCreditAmount(reward),
+      })
+    : getUiText('guestPassesSubtitle');
   return {
-    title: '3 guest passes',
+    title: getUiText('guestPassesTitle'),
     lines: [],
     customContent: {
       content: <>

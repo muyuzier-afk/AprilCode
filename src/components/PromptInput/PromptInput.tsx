@@ -27,6 +27,7 @@ import { useDoublePress } from '../../hooks/useDoublePress.js';
 import { useHistorySearch } from '../../hooks/useHistorySearch.js';
 import type { IDESelection } from '../../hooks/useIdeSelection.js';
 import { useInputBuffer } from '../../hooks/useInputBuffer.js';
+import { getUiText } from '../../i18n/ui.js';
 import { useMainLoopModel } from '../../hooks/useMainLoopModel.js';
 import { usePromptSuggestion } from '../../hooks/usePromptSuggestion.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
@@ -2035,12 +2036,14 @@ function PromptInput({
     });
     setShowModelPicker(false);
     const effectiveFastMode = (isFastMode ?? false) && !wasFastModeDisabled;
-    let message = `Model set to ${modelDisplayString(model)}`;
+    let message = getUiText('modelSetTo', {
+      model: modelDisplayString(model)
+    });
     if (isBilledAsExtraUsage(model, effectiveFastMode, isOpus1mMergeEnabled())) {
-      message += ' · Billed as extra usage';
+      message += ` · ${getUiText('billedAsExtraUsage')}`;
     }
     if (wasFastModeDisabled) {
-      message += ' · Fast mode OFF';
+      message += ` · ${getUiText('fastModeResultOff')}`;
     }
     addNotification({
       key: 'model-switched',

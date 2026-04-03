@@ -1,5 +1,6 @@
 import { c as _c } from "react/compiler-runtime";
 import React from 'react';
+import { getUiText } from '../i18n/ui.js';
 import { envDynamic } from '../utils/envDynamic.js';
 import { Box, Text } from '../ink.js';
 import { useKeybindings } from '../keybindings/useKeybinding.js';
@@ -131,7 +132,7 @@ export function IdeOnboardingDialog(t0) {
   }
   let t15;
   if ($[20] === Symbol.for("react.memo_cache_sentinel")) {
-    t15 = <Box paddingX={1}><Text dimColor={true} italic={true}>Press Enter to continue</Text></Box>;
+    t15 = <Box paddingX={1}><Text dimColor={true} italic={true}>{getUiText('pressEnterToContinuePlain')}</Text></Box>;
     $[20] = t15;
   } else {
     t15 = $[20];

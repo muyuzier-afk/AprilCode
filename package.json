@@ -89,6 +89,7 @@
     "get-east-asian-width": "^1.5.0",
     "google-auth-library": "^10.6.2",
     "graceful-fs": "^4.2.11",
+    "highlight.js": "^11.11.1",
     "human-signals": "^8.0.1",
     "indent-string": "^5.0.0",
     "jsonc-parser": "^3.3.1",

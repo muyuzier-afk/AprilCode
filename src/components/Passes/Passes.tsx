@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type { CommandResultDisplay } from '../../commands.js';
+import { getUiText } from '../../i18n/ui.js';
 import { TEARDROP_ASTERISK } from '../../constants/figures.js';
 import { useExitOnCtrlCDWithKeybindings } from '../../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { setClipboard } from '../../ink/termio/osc.js';
@@ -30,11 +31,11 @@ export function Passes({
   const [isAvailable, setIsAvailable] = useState(false);
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [referrerReward, setReferrerReward] = useState<ReferrerRewardInfo | null | undefined>(undefined);
-  const exitState = useExitOnCtrlCDWithKeybindings(() => onDone('Guest passes dialog dismissed', {
+  const exitState = useExitOnCtrlCDWithKeybindings(() => onDone(getUiText('guestPassesDismissed'), {
     display: 'system'
   }));
   const handleCancel = useCallback(() => {
-    onDone('Guest passes dialog dismissed', {
+    onDone(getUiText('guestPassesDismissed'), {
       display: 'system'
     });
   }, [onDone]);
@@ -109,9 +110,11 @@ export function Passes({
   if (loading) {
     return <Pane>
         <Box flexDirection="column" gap={1}>
-          <Text dimColor>Loading guest pass information…</Text>
+          <Text dimColor>{getUiText('guestPassesLoading')}</Text>
           <Text dimColor italic>
-            {exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>Esc to cancel</>}
+            {exitState.pending ? <>{getUiText('pressAgainToExitPlain', {
+            key: exitState.keyName
+          })}</> : <>{getUiText('permissionEscCancel')}</>}
           </Text>
         </Box>
       </Pane>;
@@ -119,9 +122,11 @@ export function Passes({
   if (!isAvailable) {
     return <Pane>
         <Box flexDirection="column" gap={1}>
-          <Text>Guest passes are not currently available.</Text>
+          <Text>{getUiText('guestPassesUnavailable')}</Text>
           <Text dimColor italic>
-            {exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>Esc to cancel</>}
+            {exitState.pending ? <>{getUiText('pressAgainToExitPlain', {
+            key: exitState.keyName
+          })}</> : <>{getUiText('permissionEscCancel')}</>}
           </Text>
         </Box>
       </Pane>;
@@ -154,7 +159,9 @@ export function Passes({
   };
   return <Pane>
       <Box flexDirection="column" gap={1}>
-        <Text color="permission">Guest passes · {availableCount} left</Text>
+        <Text color="permission">{getUiText('guestPassesRemaining', {
+          count: availableCount
+        })}</Text>
 
         <Box flexDirection="row" marginLeft={2}>
           {sortedPasses.slice(0, 3).map(pass_0 => renderTicket(pass_0))}
@@ -168,14 +175,16 @@ export function Passes({
           <Text dimColor>
             {referrerReward ? `Share a free week of April Code with friends. If they love it and subscribe, you'll get ${formatCreditAmount(referrerReward)} of extra usage to keep building. ` : 'Share a free week of April Code with friends. '}
             <Link url={referrerReward ? 'https://support.claude.com/en/articles/13456702-claude-code-guest-passes' : 'https://support.claude.com/en/articles/12875061-claude-code-guest-passes'}>
-              Terms apply.
+              {getUiText('termsApply')}
             </Link>
           </Text>
         </Box>
 
         <Box>
           <Text dimColor italic>
-            {exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>Enter to copy link · Esc to cancel</>}
+            {exitState.pending ? <>{getUiText('pressAgainToExitPlain', {
+            key: exitState.keyName
+          })}</> : <>{getUiText('enterCopyLinkEscCancel')}</>}
           </Text>
         </Box>
       </Box>

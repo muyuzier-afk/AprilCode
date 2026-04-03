@@ -1,5 +1,6 @@
 import { c as _c } from "react/compiler-runtime";
 import * as React from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import { useState } from 'react';
 import type { CommandResultDisplay, LocalJSXCommandContext } from '../../commands.js';
 import { Dialog } from '../../components/design-system/Dialog.js';
@@ -79,11 +80,13 @@ export function FastModePicker(t0) {
       });
       if (enableFastMode) {
         const fastIcon = getFastIconString(enableFastMode);
-        const modelUpdated = !isFastModeSupportedByModel(model) ? ` · model set to ${FAST_MODE_MODEL_DISPLAY}` : "";
-        onDone(`${fastIcon} Fast mode ON${modelUpdated} · ${pricing}`);
+        const modelUpdated = !isFastModeSupportedByModel(model) ? ` · ${getUiText('fastModeResultModelSet', {
+          model: FAST_MODE_MODEL_DISPLAY
+        })}` : "";
+        onDone(`${fastIcon} ${getUiText('fastModeResultOn')}${modelUpdated} · ${pricing}`);
       } else {
         setAppState(_temp3);
-        onDone("Fast mode OFF");
+        onDone(getUiText('fastModeResultOff'));
       }
     };
     $[2] = enableFastMode;
@@ -103,12 +106,12 @@ export function FastModePicker(t0) {
         if (initialFastMode) {
           applyFastMode(false, setAppState);
         }
-        onDone("Fast mode OFF", {
+        onDone(getUiText('fastModeResultOff'), {
           display: "system"
         });
         return;
       }
-      const message = initialFastMode ? `${getFastIconString()} Kept Fast mode ON` : "Kept Fast mode OFF";
+      const message = initialFastMode ? `${getFastIconString()} ${getUiText('fastModeResultKeptOn')}` : getUiText('fastModeResultKeptOff');
       onDone(message, {
         display: "system"
       });
@@ -164,7 +167,7 @@ export function FastModePicker(t0) {
   useKeybindings(t6, t7);
   let t8;
   if ($[19] === Symbol.for("react.memo_cache_sentinel")) {
-    t8 = <Text><FastIcon cooldown={isCooldown} /> Fast mode (research preview)</Text>;
+    t8 = <Text><FastIcon cooldown={isCooldown} /> {getUiText('fastModeTitle')}</Text>;
     $[19] = t8;
   } else {
     t8 = $[19];
@@ -172,7 +175,9 @@ export function FastModePicker(t0) {
   const title = t8;
   let t9;
   if ($[20] !== isUnavailable) {
-    t9 = exitState => exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : isUnavailable ? <Text>Esc to cancel</Text> : <Text>Tab to toggle · Enter to confirm · Esc to cancel</Text>;
+    t9 = exitState => exitState.pending ? <Text>{getUiText('pressAgainToExitPlain', {
+      key: exitState.keyName
+    })}</Text> : isUnavailable ? <Text>{getUiText('fastModeEscToCancel')}</Text> : <Text>{getUiText('fastModeGuide')}</Text>;
     $[20] = isUnavailable;
     $[21] = t9;
   } else {
@@ -180,8 +185,10 @@ export function FastModePicker(t0) {
   }
   let t10;
   if ($[22] !== enableFastMode || $[23] !== unavailableReason) {
-    t10 = unavailableReason ? <Box marginLeft={2}><Text color="error">{unavailableReason}</Text></Box> : <><Box flexDirection="column" gap={0} marginLeft={2}><Box flexDirection="row" gap={2}><Text bold={true}>Fast mode</Text><Text color={enableFastMode ? "fastMode" : undefined} bold={enableFastMode}>{enableFastMode ? "ON " : "OFF"}</Text><Text dimColor={true}>{pricing}</Text></Box></Box>{isCooldown && runtimeState.status === "cooldown" && <Box marginLeft={2}><Text color="warning">{runtimeState.reason === "overloaded" ? "Fast mode overloaded and is temporarily unavailable" : "You've hit your fast limit"}{" \xB7 resets in "}{formatDuration(runtimeState.resetAt - Date.now(), {
-            hideTrailingZeros: true
+    t10 = unavailableReason ? <Box marginLeft={2}><Text color="error">{unavailableReason}</Text></Box> : <><Box flexDirection="column" gap={0} marginLeft={2}><Box flexDirection="row" gap={2}><Text bold={true}>{getUiText('fastModeLabel')}</Text><Text color={enableFastMode ? "fastMode" : undefined} bold={enableFastMode}>{enableFastMode ? getUiText('fastModeOn') : getUiText('fastModeOff')}</Text><Text dimColor={true}>{pricing}</Text></Box></Box>{isCooldown && runtimeState.status === "cooldown" && <Box marginLeft={2}><Text color="warning">{runtimeState.reason === "overloaded" ? getUiText('fastModeUnavailableOverloaded') : getUiText('fastModeUnavailableLimit')}{" \xB7 "}{getUiText('fastModeResetsIn', {
+            duration: formatDuration(runtimeState.resetAt - Date.now(), {
+              hideTrailingZeros: true
+            })
           })}</Text></Box>}</>;
     $[22] = enableFastMode;
     $[23] = unavailableReason;
@@ -191,14 +198,16 @@ export function FastModePicker(t0) {
   }
   let t11;
   if ($[25] === Symbol.for("react.memo_cache_sentinel")) {
-    t11 = <Text dimColor={true}>Learn more:{" "}<Link url="https://code.claude.com/docs/en/fast-mode">https://code.claude.com/docs/en/fast-mode</Link></Text>;
+    t11 = <Text dimColor={true}>{getUiText('fastModeLearnMore')}{" "}<Link url="https://code.claude.com/docs/en/fast-mode">https://code.claude.com/docs/en/fast-mode</Link></Text>;
     $[25] = t11;
   } else {
     t11 = $[25];
   }
   let t12;
   if ($[26] !== handleCancel || $[27] !== t10 || $[28] !== t9) {
-    t12 = <Dialog title={title} subtitle={`High-speed mode for ${FAST_MODE_MODEL_DISPLAY}. Billed as extra usage at a premium rate. Separate rate limits apply.`} onCancel={handleCancel} color="fastMode" inputGuide={t9}>{t10}{t11}</Dialog>;
+    t12 = <Dialog title={title} subtitle={getUiText('fastModeSubtitle', {
+      model: FAST_MODE_MODEL_DISPLAY
+    })} onCancel={handleCancel} color="fastMode" inputGuide={t9}>{t10}{t11}</Dialog>;
     $[26] = handleCancel;
     $[27] = t10;
     $[28] = t9;
@@ -226,7 +235,9 @@ function _temp(s) {
 async function handleFastModeShortcut(enable: boolean, getAppState: () => AppState, setAppState: (f: (prev: AppState) => AppState) => void): Promise<string> {
   const unavailableReason = getFastModeUnavailableReason();
   if (unavailableReason) {
-    return `Fast mode unavailable: ${unavailableReason}`;
+    return getUiText('fastModeResultUnavailable', {
+      reason: unavailableReason
+    });
   }
   const {
     mainLoopModel
@@ -238,11 +249,13 @@ async function handleFastModeShortcut(enable: boolean, getAppState: () => AppSta
   });
   if (enable) {
     const fastIcon = getFastIconString(true);
-    const modelUpdated = !isFastModeSupportedByModel(mainLoopModel) ? ` · model set to ${FAST_MODE_MODEL_DISPLAY}` : '';
+    const modelUpdated = !isFastModeSupportedByModel(mainLoopModel) ? ` · ${getUiText('fastModeResultModelSet', {
+      model: FAST_MODE_MODEL_DISPLAY
+    })}` : '';
     const pricing = formatModelPricing(getOpus46CostTier(true));
-    return `${fastIcon} Fast mode ON${modelUpdated} · ${pricing}`;
+    return `${fastIcon} ${getUiText('fastModeResultOn')}${modelUpdated} · ${pricing}`;
   } else {
-    return `Fast mode OFF`;
+    return getUiText('fastModeResultOff');
   }
 }
 export async function call(onDone: LocalJSXCommandOnDone, context: LocalJSXCommandContext, args?: string): Promise<React.ReactNode | null> {

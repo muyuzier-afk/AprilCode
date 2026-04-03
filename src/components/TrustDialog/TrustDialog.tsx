@@ -1,6 +1,7 @@
 import { c as _c } from "react/compiler-runtime";
 import { homedir } from 'os';
 import React from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import { logEvent } from '../../services/analytics/index.js';
 import { setSessionTrustAccepted } from '../../bootstrap/state.js';
 import type { Command } from '../../commands.js';
@@ -225,10 +226,10 @@ export function TrustDialog(t0) {
   let t20;
   if ($[24] === Symbol.for("react.memo_cache_sentinel")) {
     t20 = [{
-      label: "Yes, I trust this folder",
+      label: getUiText('trustFolderYes'),
       value: "enable_all"
     }, {
-      label: "No, exit",
+      label: getUiText('trustFolderNo'),
       value: "exit"
     }];
     $[24] = t20;
@@ -245,7 +246,9 @@ export function TrustDialog(t0) {
   }
   let t22;
   if ($[27] !== exitState.keyName || $[28] !== exitState.pending) {
-    t22 = <Text dimColor={true}>{exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>Enter to confirm · Esc to cancel</>}</Text>;
+    t22 = <Text dimColor={true}>{exitState.pending ? <>{getUiText('pressAgainToExitPlain', {
+      key: exitState.keyName
+    })}</> : <>{getUiText('enterToConfirmEscToCancel')}</>}</Text>;
     $[27] = exitState.keyName;
     $[28] = exitState.pending;
     $[29] = t22;
@@ -254,7 +257,7 @@ export function TrustDialog(t0) {
   }
   let t23;
   if ($[30] !== t21 || $[31] !== t22) {
-    t23 = <PermissionDialog color="warning" titleColor="warning" title="Accessing workspace:"><Box flexDirection="column" gap={1} paddingTop={1}>{t16}{t17}{t18}{t19}{t21}{t22}</Box></PermissionDialog>;
+    t23 = <PermissionDialog color="warning" titleColor="warning" title={getUiText('trustWorkspaceTitle')}><Box flexDirection="column" gap={1} paddingTop={1}>{t16}{t17}{t18}{t19}{t21}{t22}</Box></PermissionDialog>;
     $[30] = t21;
     $[31] = t22;
     $[32] = t23;

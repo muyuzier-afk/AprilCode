@@ -1,6 +1,7 @@
 import { c as _c } from "react/compiler-runtime";
 import figures from 'figures';
 import React, { useMemo, useState } from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import type { SDKMessage } from '../../entrypoints/agentSdkTypes.js';
 import type { ToolUseContext } from '../../Tool.js';
 import type { DeepImmutable } from '../../types/utils.js';
@@ -773,7 +774,9 @@ function ReviewSessionDetail(t0) {
   return t20;
 }
 function _temp(exitState) {
-  return exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : <Byline><KeyboardShortcutHint shortcut="Enter" action="select" /><KeyboardShortcutHint shortcut="Esc" action="go back" /></Byline>;
+  return exitState.pending ? <Text>{getUiText('pressAgainToExitPlain', {
+    key: exitState.keyName
+  })}</Text> : <Byline><KeyboardShortcutHint shortcut="Enter" action="select" /><KeyboardShortcutHint shortcut="Esc" action="go back" /></Byline>;
 }
 export function RemoteSessionDetailDialog({
   session,
@@ -803,7 +806,7 @@ export function RemoteSessionDetailDialog({
   if (session.isRemoteReview) {
     return <ReviewSessionDetail session={session} onDone={onDone} onBack={onBack} onKill={onKill} />;
   }
-  const handleClose = () => onDone('Remote session details dismissed', {
+  const handleClose = () => onDone(getUiText('remoteSessionDismissed'), {
     display: 'system'
   });
 
@@ -812,7 +815,7 @@ export function RemoteSessionDetailDialog({
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === ' ') {
       e.preventDefault();
-      onDone('Remote session details dismissed', {
+      onDone(getUiText('remoteSessionDismissed'), {
         display: 'system'
       });
     } else if (e.key === 'left' && onBack) {
@@ -846,29 +849,31 @@ export function RemoteSessionDetailDialog({
   // Map TaskStatus to display status (handle 'pending')
   const displayStatus = session.status === 'pending' ? 'starting' : session.status;
   return <Box flexDirection="column" tabIndex={0} autoFocus onKeyDown={handleKeyDown}>
-      <Dialog title="Remote session details" onCancel={handleClose} color="background" inputGuide={exitState => exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : <Byline>
+      <Dialog title={getUiText('remoteSessionDetailsTitle')} onCancel={handleClose} color="background" inputGuide={exitState => exitState.pending ? <Text>{getUiText('pressAgainToExitPlain', {
+            key: exitState.keyName
+          })}</Text> : <Byline>
               {onBack && <KeyboardShortcutHint shortcut="←" action="go back" />}
               <KeyboardShortcutHint shortcut="Esc/Enter/Space" action="close" />
               {!isTeleporting && <KeyboardShortcutHint shortcut="t" action="teleport" />}
             </Byline>}>
         <Box flexDirection="column">
           <Text>
-            <Text bold>Status</Text>:{' '}
+            <Text bold>{getUiText('remoteSessionStatus')}</Text>:{' '}
             {displayStatus === 'running' || displayStatus === 'starting' ? <Text color="background">{displayStatus}</Text> : displayStatus === 'completed' ? <Text color="success">{displayStatus}</Text> : <Text color="error">{displayStatus}</Text>}
           </Text>
           <Text>
-            <Text bold>Runtime</Text>:{' '}
+            <Text bold>{getUiText('remoteSessionRuntime')}</Text>:{' '}
             {formatDuration((session.endTime ?? Date.now()) - session.startTime)}
           </Text>
           <Text wrap="truncate-end">
-            <Text bold>Title</Text>: {displayTitle}
+            <Text bold>{getUiText('remoteSessionTitleLabel')}</Text>: {displayTitle}
           </Text>
           <Text>
-            <Text bold>Progress</Text>:{' '}
+            <Text bold>{getUiText('remoteSessionProgress')}</Text>:{' '}
             <RemoteSessionProgress session={session} />
           </Text>
           <Text>
-            <Text bold>Session URL</Text>:{' '}
+            <Text bold>{getUiText('remoteSessionUrl')}</Text>:{' '}
             <Link url={getRemoteTaskSessionUrl(session.sessionId)}>
               <Text dimColor>{getRemoteTaskSessionUrl(session.sessionId)}</Text>
             </Link>
@@ -878,22 +883,26 @@ export function RemoteSessionDetailDialog({
         {/* Remote session messages section */}
         {session.log.length > 0 && <Box flexDirection="column" marginTop={1}>
             <Text>
-              <Text bold>Recent messages</Text>:
+              <Text bold>{getUiText('remoteSessionRecentMessages')}</Text>:
             </Text>
             <Box flexDirection="column" height={10} overflowY="hidden">
               {lastMessages.map((msg, i) => <Message key={i} message={msg} lookups={EMPTY_LOOKUPS} addMargin={i > 0} tools={toolUseContext.options.tools} commands={toolUseContext.options.commands} verbose={toolUseContext.options.verbose} inProgressToolUseIDs={new Set()} progressMessagesForMessage={[]} shouldAnimate={false} shouldShowDot={false} style="condensed" isTranscriptMode={false} isStatic={true} />)}
             </Box>
             <Box marginTop={1}>
               <Text dimColor italic>
-                Showing last {lastMessages.length} of {session.log.length}{' '}
-                messages
+                {getUiText('remoteSessionShowingLast', {
+                  shown: lastMessages.length,
+                  total: session.log.length
+                })}
               </Text>
             </Box>
           </Box>}
 
         {/* Teleport error message */}
         {teleportError && <Box marginTop={1}>
-            <Text color="error">Teleport failed: {teleportError}</Text>
+            <Text color="error">{getUiText('remoteSessionTeleportFailed', {
+              error: teleportError
+            })}</Text>
           </Box>}
 
         {/* Teleporting status */}

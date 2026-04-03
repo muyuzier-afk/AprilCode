@@ -1,5 +1,6 @@
 import { c as _c } from "react/compiler-runtime";
 import * as React from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import { useEffect, useState } from 'react';
 import { useSearchInput } from '../../hooks/useSearchInput.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
@@ -67,7 +68,7 @@ const CHROME_ROWS = 10;
 const MIN_VISIBLE = 2;
 export function FuzzyPicker<T>({
   title,
-  placeholder = 'Type to search…',
+  placeholder = getUiText('fuzzyPickerTypeToSearch'),
   initialQuery,
   items,
   getKey,
@@ -82,7 +83,7 @@ export function FuzzyPicker<T>({
   onShiftTab,
   onFocus,
   onCancel,
-  emptyMessage = 'No results',
+  emptyMessage = getUiText('fuzzyPickerNoResults'),
   matchLabel,
   selectAction = 'select',
   extraHints

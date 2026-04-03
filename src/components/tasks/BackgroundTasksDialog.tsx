@@ -2,6 +2,7 @@ import { c as _c } from "react/compiler-runtime";
 import { feature } from 'bun:bundle';
 import figures from 'figures';
 import React, { type ReactNode, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import { isCoordinatorMode } from '../../coordinator/coordinatorMode.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
 import { useAppState, useSetAppState } from '../../state/AppState.js';
@@ -417,7 +418,9 @@ export function BackgroundTasksDialog({
   });
   function renderInputGuide(exitState: ExitState): React.ReactNode {
     if (exitState.pending) {
-      return <Text>Press {exitState.keyName} again to exit</Text>;
+      return <Text>{getUiText('pressAgainToExitPlain', {
+        key: exitState.keyName
+      })}</Text>;
     }
     return <Byline>{actions}</Byline>;
   }

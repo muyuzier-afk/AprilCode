@@ -2,6 +2,7 @@ import { c as _c } from "react/compiler-runtime";
 import figures from 'figures';
 import * as React from 'react';
 import { useState } from 'react';
+import { getUiText } from '../../../i18n/ui.js';
 import TextInput from '../../../components/TextInput.js';
 import { useExitOnCtrlCDWithKeybindings } from '../../../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { useTerminalSize } from '../../../hooks/useTerminalSize.js';
@@ -117,7 +118,9 @@ export function PermissionRuleInput(t0) {
   }
   let t10;
   if ($[18] !== exitState.keyName || $[19] !== exitState.pending) {
-    t10 = <Box marginLeft={3}>{exitState.pending ? <Text dimColor={true}>Press {exitState.keyName} again to exit</Text> : <Text dimColor={true}>Enter to submit · Esc to cancel</Text>}</Box>;
+    t10 = <Box marginLeft={3}>{exitState.pending ? <Text dimColor={true}>{getUiText('pressAgainToExitPlain', {
+      key: exitState.keyName
+    })}</Text> : <Text dimColor={true}>{getUiText('permissionEnterSubmitEscCancel')}</Text>}</Box>;
     $[18] = exitState.keyName;
     $[19] = exitState.pending;
     $[20] = t10;

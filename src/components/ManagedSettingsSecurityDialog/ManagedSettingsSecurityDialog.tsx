@@ -1,5 +1,6 @@
 import { c as _c } from "react/compiler-runtime";
 import React from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import { useExitOnCtrlCDWithKeybindings } from '../../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { Box, Text } from '../../ink.js';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';
@@ -93,10 +94,10 @@ export function ManagedSettingsSecurityDialog(t0) {
   let t15;
   if ($[11] === Symbol.for("react.memo_cache_sentinel")) {
     t15 = [{
-      label: "Yes, I trust these settings",
+      label: getUiText('trustSettingsYes'),
       value: "accept"
     }, {
-      label: "No, exit April Code",
+      label: getUiText('trustSettingsNo'),
       value: "exit"
     }];
     $[11] = t15;
@@ -113,7 +114,9 @@ export function ManagedSettingsSecurityDialog(t0) {
   }
   let t17;
   if ($[14] !== exitState.keyName || $[15] !== exitState.pending) {
-    t17 = <Text dimColor={true}>{exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>Enter to confirm · Esc to exit</>}</Text>;
+    t17 = <Text dimColor={true}>{exitState.pending ? <>{getUiText('pressAgainToExitPlain', {
+      key: exitState.keyName
+    })}</> : <>{getUiText('enterToConfirmEscToExit')}</>}</Text>;
     $[14] = exitState.keyName;
     $[15] = exitState.pending;
     $[16] = t17;

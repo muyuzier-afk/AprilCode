@@ -1,5 +1,6 @@
 import { c as _c } from "react/compiler-runtime";
 import React from 'react';
+import { getUiText } from '../../i18n/ui.js';
 import { BLACK_CIRCLE } from '../../constants/figures.js';
 import { Box, Text } from '../../ink.js';
 import { useDebouncedDigitInput } from './useDebouncedDigitInput.js';
@@ -57,7 +58,7 @@ export function TranscriptSharePrompt(t0) {
   }
   let t4;
   if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
-    t4 = <Box marginLeft={2}><Text dimColor={true}>Learn more: https://code.claude.com/docs/en/data-usage#session-quality-surveys</Text></Box>;
+    t4 = <Box marginLeft={2}><Text dimColor={true}>{getUiText('learnMore')} https://code.claude.com/docs/en/data-usage#session-quality-surveys</Text></Box>;
     $[7] = t4;
   } else {
     t4 = $[7];

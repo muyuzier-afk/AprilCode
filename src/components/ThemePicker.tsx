@@ -7,6 +7,7 @@ import { Box, Text, usePreviewTheme, useTheme, useThemeSetting } from '../ink.js
 import { useRegisterKeybindingContext } from '../keybindings/KeybindingContext.js';
 import { useKeybinding } from '../keybindings/useKeybinding.js';
 import { useShortcutDisplay } from '../keybindings/useShortcutDisplay.js';
+import { getUiText } from '../i18n/ui.js';
 import { useAppState, useSetAppState } from '../state/AppState.js';
 import { gracefulShutdown } from '../utils/gracefulShutdown.js';
 import { updateSettingsForSource } from '../utils/settings/settings.js';
@@ -111,25 +112,25 @@ export function ThemePicker(t0) {
   let t10;
   if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
     t10 = [...(feature("AUTO_THEME") ? [{
-      label: "Auto (match terminal)",
+      label: getUiText('themeOptionAuto'),
       value: "auto" as const
     }] : []), {
-      label: "Dark mode",
+      label: getUiText('themeOptionDark'),
       value: "dark"
     }, {
-      label: "Light mode",
+      label: getUiText('themeOptionLight'),
       value: "light"
     }, {
-      label: "Dark mode (colorblind-friendly)",
+      label: getUiText('themeOptionDarkDaltonized'),
       value: "dark-daltonized"
     }, {
-      label: "Light mode (colorblind-friendly)",
+      label: getUiText('themeOptionLightDaltonized'),
       value: "light-daltonized"
     }, {
-      label: "Dark mode (ANSI colors only)",
+      label: getUiText('themeOptionDarkAnsi'),
       value: "dark-ansi"
     }, {
-      label: "Light mode (ANSI colors only)",
+      label: getUiText('themeOptionLightAnsi'),
       value: "light-ansi"
     }];
     $[7] = t10;
@@ -139,7 +140,7 @@ export function ThemePicker(t0) {
   const themeOptions = t10;
   let t11;
   if ($[8] !== showIntroText) {
-    t11 = showIntroText ? <Text>Let's get started.</Text> : <Text bold={true} color="permission">Theme</Text>;
+    t11 = showIntroText ? <Text>{getUiText('themeIntro')}</Text> : <Text bold={true} color="permission">{getUiText('themeSectionTitle')}</Text>;
     $[8] = showIntroText;
     $[9] = t11;
   } else {
@@ -147,7 +148,7 @@ export function ThemePicker(t0) {
   }
   let t12;
   if ($[10] === Symbol.for("react.memo_cache_sentinel")) {
-    t12 = <Text bold={true}>Choose the text style that looks best with your terminal</Text>;
+    t12 = <Text bold={true}>{getUiText('themeHeading')}</Text>;
     $[10] = t12;
   } else {
     t12 = $[10];
@@ -249,7 +250,17 @@ export function ThemePicker(t0) {
   } else {
     t21 = $[36];
   }
-  const t22 = colorModuleUnavailableReason === "env" ? `Syntax highlighting disabled (via CLAUDE_CODE_SYNTAX_HIGHLIGHT=${process.env.CLAUDE_CODE_SYNTAX_HIGHLIGHT})` : syntaxHighlightingDisabled ? `Syntax highlighting disabled (${syntaxToggleShortcut} to enable)` : syntaxTheme ? `Syntax theme: ${syntaxTheme.theme}${syntaxTheme.source ? ` (from ${syntaxTheme.source})` : ""} (${syntaxToggleShortcut} to disable)` : `Syntax highlighting enabled (${syntaxToggleShortcut} to disable)`;
+  const t22 = colorModuleUnavailableReason === "env" ? getUiText('themeSyntaxDisabledEnv', {
+    value: process.env.CLAUDE_CODE_SYNTAX_HIGHLIGHT ?? '',
+  }) : syntaxHighlightingDisabled ? getUiText('themeSyntaxDisabledShortcut', {
+    shortcut: syntaxToggleShortcut,
+  }) : syntaxTheme ? getUiText('themeSyntaxTheme', {
+    theme: syntaxTheme.theme,
+    sourceSuffix: syntaxTheme.source ? ` (${syntaxTheme.source})` : '',
+    shortcut: syntaxToggleShortcut,
+  }) : getUiText('themeSyntaxEnabledShortcut', {
+    shortcut: syntaxToggleShortcut,
+  });
   let t23;
   if ($[37] !== t22) {
     t23 = <Text dimColor={true}>{" "}{t22}</Text>;
@@ -297,7 +308,9 @@ export function ThemePicker(t0) {
     }
     let t28;
     if ($[50] !== exitState || $[51] !== hideEscToCancel) {
-      t28 = !hideEscToCancel && <Box><Text dimColor={true} italic={true}>{exitState.pending ? <>Press {exitState.keyName} again to exit</> : <Byline><KeyboardShortcutHint shortcut="Enter" action="select" /><KeyboardShortcutHint shortcut="Esc" action="cancel" /></Byline>}</Text></Box>;
+      t28 = !hideEscToCancel && <Box><Text dimColor={true} italic={true}>{exitState.pending ? <>{getUiText('pressAgainToExit', {
+        key: exitState.keyName,
+      })}</> : <Byline><KeyboardShortcutHint shortcut="Enter" action={getUiText('themeSelectAction')} /><KeyboardShortcutHint shortcut="Esc" action={getUiText('cancelAction')} /></Byline>}</Text></Box>;
       $[50] = exitState;
       $[51] = hideEscToCancel;
       $[52] = t28;

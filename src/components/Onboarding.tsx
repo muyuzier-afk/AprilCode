@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { setupTerminal, shouldOfferTerminalSetup } from '../commands/terminalSetup/terminalSetup.js'
 import { useExitOnCtrlCDWithKeybindings } from '../hooks/useExitOnCtrlCDWithKeybindings.js'
-import { Box, Link, Newline, Text, useTheme } from '../ink.js'
+import { Box, Newline, Text, useTheme } from '../ink.js'
+import { getStoredUiLanguage, getUiText, getUiLanguage, setUiLanguage } from '../i18n/ui.js'
 import { useKeybindings } from '../keybindings/useKeybinding.js'
 import { env } from '../utils/env.js'
 import type { ThemeSetting } from '../utils/theme.js'
@@ -11,9 +12,10 @@ import { Select } from './CustomSelect/select.js'
 import { WelcomeV2 } from './LogoV2/WelcomeV2.js'
 import { PressEnterToContinue } from './PressEnterToContinue.js'
 import { ThemePicker } from './ThemePicker.js'
+import { UiLanguageSetup } from './UiLanguageSetup.js'
 import { OrderedList } from './ui/OrderedList.js'
 
-type StepId = 'theme' | 'api-config' | 'security' | 'terminal-setup'
+type StepId = 'ui-language' | 'theme' | 'api-config' | 'security' | 'terminal-setup'
 
 type OnboardingStep = {
   id: StepId
@@ -26,6 +28,7 @@ type Props = {
 
 export function Onboarding({ onDone }: Props): React.ReactNode {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [uiLanguage, setUiLanguageState] = useState(() => getUiLanguage())
   const [theme, setTheme] = useTheme()
   const exitState = useExitOnCtrlCDWithKeybindings()
 
@@ -46,7 +49,7 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
       <ThemePicker
         onThemeSelect={handleThemeSelection}
         showIntroText
-        helpText="To change this later, run /theme"
+        helpText={getUiText('themeHelpText')}
         hideEscToCancel
         skipExitHandling
       />
@@ -57,31 +60,28 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
 
   const securityStep = (
     <Box flexDirection="column" gap={1} paddingLeft={1}>
-      <Text bold>Security notes:</Text>
+      <Text bold>{getUiText('securityTitle')}</Text>
       <Box flexDirection="column" width={70}>
         <OrderedList>
           <OrderedList.Item>
-            <Text>April Code can make mistakes</Text>
+            <Text>{getUiText('securityItem1Title')}</Text>
             <Text dimColor wrap="wrap">
-              You should always review model output, especially before
-              <Newline />
-              executing code or applying file edits.
+              {getUiText('securityItem1Body')}
               <Newline />
             </Text>
           </OrderedList.Item>
           <OrderedList.Item>
-            <Text>Only use it with repositories and prompts you trust</Text>
+            <Text>{getUiText('securityItem2Title')}</Text>
             <Text dimColor wrap="wrap">
-              Prompt injection and hostile tool output are still risks.
-              <Newline />
-              Review generated commands before running them.
+              {getUiText('securityItem2Body')}
             </Text>
           </OrderedList.Item>
           <OrderedList.Item>
-            <Text>Telemetry is disabled by default</Text>
+            <Text>{getUiText('securityItem3Title')}</Text>
             <Text dimColor wrap="wrap">
-              Set <Text bold>APRIL_TELEMETRY_ENABLED=1</Text> only if you later add
-              your own telemetry pipeline.
+              {getUiText('securityItem3Body').split('APRIL_TELEMETRY_ENABLED=1')[0]}
+              <Text bold>APRIL_TELEMETRY_ENABLED=1</Text>
+              {getUiText('securityItem3Body').split('APRIL_TELEMETRY_ENABLED=1')[1] ?? ''}
             </Text>
           </OrderedList.Item>
         </OrderedList>
@@ -92,6 +92,22 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
 
   const steps: OnboardingStep[] = [
   ]
+
+  if (!getStoredUiLanguage()) {
+    steps.push({
+      id: 'ui-language',
+      component: (
+        <UiLanguageSetup
+          initialLanguage={uiLanguage}
+          onDone={language => {
+            setUiLanguage(language)
+            setUiLanguageState(language)
+            goToNextStep()
+          }}
+        />
+      ),
+    })
+  }
 
   if (!hasAprilApiConfig()) {
     steps.push({
@@ -115,24 +131,23 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
       id: 'terminal-setup',
       component: (
         <Box flexDirection="column" gap={1} paddingLeft={1}>
-          <Text bold>Use April Code's terminal setup?</Text>
+          <Text bold>{getUiText('terminalSetupTitle')}</Text>
           <Box flexDirection="column" width={70} gap={1}>
             <Text>
-              For the optimal coding experience, enable the recommended settings
+              {getUiText('terminalSetupIntro')}
               <Newline />
-              for your terminal:{' '}
               {env.terminal === 'Apple_Terminal'
-                ? 'Option+Enter for newlines and visual bell'
-                : 'Shift+Enter for newlines'}
+                ? getUiText('terminalSetupAppleMode')
+                : getUiText('terminalSetupOtherMode')}
             </Text>
             <Select
               options={[
                 {
-                  label: 'Yes, use recommended settings',
+                  label: getUiText('terminalSetupYes'),
                   value: 'install',
                 },
                 {
-                  label: 'No, maybe later with /terminal-setup',
+                  label: getUiText('terminalSetupNo'),
                   value: 'no',
                 },
               ]}
@@ -147,9 +162,9 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
             />
             <Text dimColor>
               {exitState.pending ? (
-                <>Press {exitState.keyName} again to exit</>
+                <>{getUiText('pressAgainToExit', { key: exitState.keyName })}</>
               ) : (
-                <>Enter to confirm · Esc to skip</>
+                <>{getUiText('enterToConfirmEscToSkip')}</>
               )}
             </Text>
           </Box>
@@ -209,7 +224,9 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
         {currentStep.component}
         {exitState.pending ? (
           <Box padding={1}>
-            <Text dimColor>Press {exitState.keyName} again to exit</Text>
+            <Text dimColor>
+              {getUiText('pressAgainToExit', { key: exitState.keyName })}
+            </Text>
           </Box>
         ) : null}
       </Box>

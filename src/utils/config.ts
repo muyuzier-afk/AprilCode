@@ -195,6 +195,7 @@ export type GlobalConfig = {
   doctorShownAtSession?: number
   userID?: string
   theme: ThemeSetting
+  uiLanguage?: 'en' | 'zh-CN'
   hasCompletedAprilOnboarding?: boolean
   hasCompletedOnboarding?: boolean
   // Tracks the last version that reset onboarding, used with MIN_VERSION_REQUIRING_ONBOARDING_RESET
@@ -589,6 +590,7 @@ function createDefaultGlobalConfig(): GlobalConfig {
     installMethod: undefined,
     autoUpdates: undefined,
     theme: 'dark',
+    uiLanguage: undefined,
     preferredNotifChannel: 'auto',
     verbose: false,
     editorMode: 'normal',
@@ -631,6 +633,7 @@ export const GLOBAL_CONFIG_KEYS = [
   'autoUpdates',
   'autoUpdatesProtectedForNative',
   'theme',
+  'uiLanguage',
   'verbose',
   'preferredNotifChannel',
   'shiftEnterKeyBindingInstalled',

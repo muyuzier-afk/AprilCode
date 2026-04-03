@@ -1,5 +1,6 @@
 /* eslint-disable custom-rules/no-process-exit -- CLI subcommand handler intentionally exits */
 
+import { getUiText } from '../../i18n/ui.js'
 import type { OAuthTokens } from '../../services/oauth/types.js'
 import {
   clearAprilApiConfig,
@@ -8,13 +9,10 @@ import {
   hasAprilApiConfig,
 } from '../../utils/april.js'
 
-const OAUTH_REMOVED_MESSAGE =
-  'OAuth login has been removed from April Code. Open April Code and run /login for initial setup, or /provider to update API Type, Key, Base URL, and Model.\n'
+const OAUTH_REMOVED_MESSAGE = `${getUiText('oauthRemovedLong')}`
 
 export async function installOAuthTokens(_tokens: OAuthTokens): Promise<void> {
-  throw new Error(
-    'OAuth login has been removed from April Code. Use /login for initial setup, or /provider to update API Type, Key, Base URL, and Model.',
-  )
+  throw new Error(getUiText('oauthRemovedShort'))
 }
 
 export async function authLogin(): Promise<void> {
@@ -38,15 +36,21 @@ export async function authStatus(opts: {
   }
 
   if (opts.text) {
-    process.stdout.write(`configured: ${status.configured ? 'yes' : 'no'}\n`)
-    process.stdout.write(`apiFormat: ${status.apiFormatLabel}\n`)
     process.stdout.write(
-      `apiKeyConfigured: ${status.apiKeyConfigured ? 'yes' : 'no'}\n`,
+      `${getUiText('statusConfigured')}: ${status.configured ? getUiText('yes') : getUiText('no')}\n`,
     )
-    process.stdout.write(`baseUrl: ${status.baseUrl ?? '(not set)'}\n`)
-    process.stdout.write(`model: ${status.model ?? '(not set)'}\n`)
+    process.stdout.write(`${getUiText('statusApiFormat')}: ${status.apiFormatLabel}\n`)
     process.stdout.write(
-      `telemetryEnabled: ${status.telemetryEnabled ? 'yes' : 'no'}\n`,
+      `${getUiText('statusApiKeyConfigured')}: ${status.apiKeyConfigured ? getUiText('yes') : getUiText('no')}\n`,
+    )
+    process.stdout.write(
+      `${getUiText('statusBaseUrl')}: ${status.baseUrl ?? getUiText('notSet')}\n`,
+    )
+    process.stdout.write(
+      `${getUiText('statusModel')}: ${status.model ?? getUiText('notSet')}\n`,
+    )
+    process.stdout.write(
+      `${getUiText('statusTelemetryEnabled')}: ${status.telemetryEnabled ? getUiText('yes') : getUiText('no')}\n`,
     )
   } else {
     process.stdout.write(`${JSON.stringify(status, null, 2)}\n`)
@@ -57,6 +61,6 @@ export async function authStatus(opts: {
 
 export async function authLogout(): Promise<void> {
   await clearAprilApiConfig()
-  process.stdout.write('Cleared stored April API credentials.\n')
+  process.stdout.write(`${getUiText('clearedApiCredentials')}\n`)
   process.exit(0)
 }

@@ -1,7 +1,7 @@
+import { getUiText } from '../../i18n/ui.js'
 import type { OAuthTokens } from './types.js'
 
-const OAUTH_REMOVED_MESSAGE =
-  'OAuth login has been removed from April Code. Use /login to configure API key, base URL, and model.'
+const OAUTH_REMOVED_MESSAGE = getUiText('oauthRemovedShort')
 
 export class OAuthService {
   async startOAuthFlow(

@@ -32,6 +32,7 @@ import { getRemoteSessionUrl } from './constants/product.js';
 import { getSystemContext, getUserContext } from './context.js';
 import { init, initializeTelemetryAfterTrust } from './entrypoints/init.js';
 import { addToHistory } from './history.js';
+import { getUiText } from './i18n/ui.js';
 import type { Root } from './ink.js';
 import { launchRepl } from './replLauncher.js';
 import { hasGrowthBookEnvOverride, initializeGrowthBook, refreshGrowthBookAfterAuthChange } from './services/analytics/growthbook.js';
@@ -4130,22 +4131,22 @@ async function run(): Promise<CommanderCommand> {
       telemetryEnabled: process.env.APRIL_TELEMETRY_ENABLED === '1'
     };
     if (opts.text) {
-      process.stdout.write(`configured: ${status.configured ? 'yes' : 'no'}\\n`);
-      process.stdout.write(`apiFormat: ${status.apiFormatLabel}\\n`);
-      process.stdout.write(`apiKeyConfigured: ${status.apiKeyConfigured ? 'yes' : 'no'}\\n`);
-      process.stdout.write(`baseUrl: ${status.baseUrl ?? '(not set)'}\\n`);
-      process.stdout.write(`model: ${status.model ?? '(not set)'}\\n`);
-      process.stdout.write(`telemetryEnabled: ${status.telemetryEnabled ? 'yes' : 'no'}\\n`);
+      process.stdout.write(`${getUiText('statusConfigured')}: ${status.configured ? getUiText('yes') : getUiText('no')}\\n`);
+      process.stdout.write(`${getUiText('statusApiFormat')}: ${status.apiFormatLabel}\\n`);
+      process.stdout.write(`${getUiText('statusApiKeyConfigured')}: ${status.apiKeyConfigured ? getUiText('yes') : getUiText('no')}\\n`);
+      process.stdout.write(`${getUiText('statusBaseUrl')}: ${status.baseUrl ?? getUiText('notSet')}\\n`);
+      process.stdout.write(`${getUiText('statusModel')}: ${status.model ?? getUiText('notSet')}\\n`);
+      process.stdout.write(`${getUiText('statusTelemetryEnabled')}: ${status.telemetryEnabled ? getUiText('yes') : getUiText('no')}\\n`);
       return;
     }
     process.stdout.write(`${JSON.stringify(status, null, 2)}\\n`);
   });
-  auth.command('logout').description('Clear stored April API credentials').action(async () => {
+  auth.command('logout').description(getUiText('logoutDescription')).action(async () => {
     const {
       clearAprilApiConfig
     } = await import('./utils/april.js');
     await clearAprilApiConfig();
-    process.stdout.write('Cleared stored April API credentials.\\n');
+    process.stdout.write(`${getUiText('clearedApiCredentials')}\\n`);
   });
 
   /**
@@ -4277,7 +4278,7 @@ async function run(): Promise<CommanderCommand> {
   // END ANT-ONLY
 
   // Setup token command
-  program.command('setup-token').description('OAuth token setup removed; use /login instead').action(async () => {
+  program.command('setup-token').description(getUiText('setupTokenDescription')).action(async () => {
     const [{
       setupTokenHandler
     }, {

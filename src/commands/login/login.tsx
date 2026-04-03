@@ -4,6 +4,7 @@ import type { LocalJSXCommandContext } from '../../commands.js'
 import { AprilApiConfigSetup } from '../../components/AprilApiConfigSetup.js'
 import { ConfigurableShortcutHint } from '../../components/ConfigurableShortcutHint.js'
 import { Dialog } from '../../components/design-system/Dialog.js'
+import { getUiText } from '../../i18n/ui.js'
 import { Box, Text } from '../../ink.js'
 import type { LocalJSXCommandOnDone } from '../../types/command.js'
 import { stripSignatureBlocks } from '../../utils/messages.js'
@@ -24,11 +25,11 @@ export async function call(
             ...prev,
             authVersion: prev.authVersion + 1,
           }))
-          onDone('API configuration saved')
+          onDone(getUiText('apiConfigurationSaved'))
           return
         }
 
-        onDone('API configuration interrupted')
+        onDone(getUiText('apiConfigurationInterrupted'))
       }}
     />
   )
@@ -51,18 +52,18 @@ function ConfigureApiDialog(props: {
 }): React.ReactNode {
   return (
     <Dialog
-      title="Configure API"
+      title={getUiText('configureApiTitle')}
       onCancel={() => props.onDone(false)}
       color="permission"
       inputGuide={exitState =>
         exitState.pending ? (
-          <Text>Press {exitState.keyName} again to exit</Text>
+          <Text>{getUiText('pressAgainToExit', { key: exitState.keyName })}</Text>
         ) : (
           <ConfigurableShortcutHint
             action="confirm:no"
             context="Confirmation"
             fallback="Esc"
-            description="cancel"
+            description={getUiText('cancelAction')}
           />
         )
       }

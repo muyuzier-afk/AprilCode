@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { Box, Text } from '../ink.js'
+import { getUiText } from '../i18n/ui.js'
 import {
   getAprilApiConfig,
   saveAprilApiConfig,
@@ -24,44 +25,47 @@ type FieldDefinition = {
   mask?: string
 }
 
-const FIELDS: FieldDefinition[] = [
-  {
-    key: 'apiFormat',
-    label: 'API Type',
-    placeholder: 'anthropic / openai-responses / openai-chat',
-    description:
-      '可选 anthropic、openai-responses、openai-chat（三选一）。',
-  },
-  {
-    key: 'apiKey',
-    label: 'API Key',
-    placeholder: 'sk-...',
-    description: '输入所选 API 的密钥。',
-    mask: '*',
-  },
-  {
-    key: 'baseUrl',
-    label: 'Base URL',
-    placeholder: 'https://example.com/v1',
-    description:
-      '输入 API 基础地址。OpenAI Like 通常是 https://example.com/v1，Anthropic 可用 https://api.anthropic.com 。',
-  },
-  {
-    key: 'model',
-    label: 'Model',
-    placeholder: 'claude-sonnet-4-5 / gpt-4.1 / qwen-max',
-    description: '输入默认模型名称。',
-  },
-]
+function getFields(): FieldDefinition[] {
+  return [
+    {
+      key: 'apiFormat',
+      label: getUiText('apiTypeLabel'),
+      placeholder: getUiText('apiTypePlaceholder'),
+      description: getUiText('apiTypeDescription'),
+    },
+    {
+      key: 'apiKey',
+      label: getUiText('apiKeyLabel'),
+      placeholder: getUiText('apiKeyPlaceholder'),
+      description: getUiText('apiKeyDescription'),
+      mask: '*',
+    },
+    {
+      key: 'baseUrl',
+      label: getUiText('baseUrlFieldLabel'),
+      placeholder: getUiText('baseUrlPlaceholder'),
+      description: getUiText('baseUrlDescription'),
+    },
+    {
+      key: 'model',
+      label: getUiText('modelLabel'),
+      placeholder: getUiText('modelPlaceholder'),
+      description: getUiText('modelDescription'),
+    },
+  ]
+}
 
-function findInitialFieldIndex(values: Record<FieldKey, string>): number {
-  const firstEmpty = FIELDS.findIndex(field => !values[field.key].trim())
+function findInitialFieldIndex(
+  values: Record<FieldKey, string>,
+  fields: FieldDefinition[],
+): number {
+  const firstEmpty = fields.findIndex(field => !values[field.key].trim())
   return firstEmpty === -1 ? 0 : firstEmpty
 }
 
 function maskValue(field: FieldDefinition, value: string): string {
   if (!value) {
-    return '未设置'
+    return getUiText('notSet')
   }
   if (field.key === 'apiFormat') {
     return value
@@ -76,28 +80,25 @@ function maskValue(field: FieldDefinition, value: string): string {
 }
 
 export function AprilApiConfigSetup({ onDone }: Props): React.ReactNode {
+  const fields = getFields()
   const existing = useMemo(() => getAprilApiConfig(), [])
-  const [values, setValues] = useState<Record<FieldKey, string>>({
+  const initialValues: Record<FieldKey, string> = {
     apiFormat: existing.apiFormat,
     apiKey: existing.apiKey ?? '',
     baseUrl: existing.baseUrl ?? '',
     model: existing.model ?? '',
-  })
+  }
+  const [values, setValues] = useState<Record<FieldKey, string>>(initialValues)
   const [fieldIndex, setFieldIndex] = useState(() =>
-    findInitialFieldIndex({
-      apiFormat: existing.apiFormat,
-      apiKey: existing.apiKey ?? '',
-      baseUrl: existing.baseUrl ?? '',
-      model: existing.model ?? '',
-    }),
+    findInitialFieldIndex(initialValues, fields),
   )
   const [cursorOffset, setCursorOffset] = useState(
-    () => values[FIELDS[findInitialFieldIndex(values)]?.key ?? 'apiKey'].length,
+    () => values[fields[findInitialFieldIndex(initialValues, fields)]?.key ?? 'apiKey'].length,
   )
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  const currentField = FIELDS[fieldIndex] ?? FIELDS[0]
+  const currentField = fields[fieldIndex] ?? fields[0]
 
   const handleChange = (value: string): void => {
     setValues(current => ({
@@ -142,8 +143,8 @@ export function AprilApiConfigSetup({ onDone }: Props): React.ReactNode {
     setValues(nextValues)
     setError(null)
 
-    if (fieldIndex < FIELDS.length - 1) {
-      const nextField = FIELDS[fieldIndex + 1]
+    if (fieldIndex < fields.length - 1) {
+      const nextField = fields[fieldIndex + 1]
       setFieldIndex(fieldIndex + 1)
       setCursorOffset(nextValues[nextField.key].length)
       return
@@ -166,22 +167,20 @@ export function AprilApiConfigSetup({ onDone }: Props): React.ReactNode {
 
   return (
     <Box flexDirection="column" gap={1} paddingLeft={1} width={76}>
-      <Text dimColor>
-        April Code 使用固定的 API Type / Key / URL / Model 配置，OAuth 已禁用，关键值会加密存储。后续可用 /provider 修改。
-      </Text>
+      <Text dimColor>{getUiText('apiSetupSummary')}</Text>
       <Box flexDirection="column">
-        {FIELDS.map((field, index) => (
+        {fields.map((field, index) => (
           <Text key={field.key} dimColor={index !== fieldIndex}>
             {index + 1}. {field.label}: {maskValue(field, values[field.key])}
           </Text>
         ))}
       </Box>
       <Text bold>
-        {fieldIndex + 1}/{FIELDS.length} {currentField.label}
+        {fieldIndex + 1}/{fields.length} {currentField.label}
       </Text>
       <Text dimColor>{currentField.description}</Text>
       {isSaving ? (
-        <Text>正在保存配置...</Text>
+        <Text>{getUiText('savingConfig')}</Text>
       ) : (
         <TextInput
           value={values[currentField.key]}
@@ -199,7 +198,7 @@ export function AprilApiConfigSetup({ onDone }: Props): React.ReactNode {
         />
       )}
       {error ? <Text color="error">{error}</Text> : null}
-      <Text dimColor>Enter 继续，Esc 取消。</Text>
+      <Text dimColor>{getUiText('setupContinueCancel')}</Text>
     </Box>
   )
 }

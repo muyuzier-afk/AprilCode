@@ -8,12 +8,10 @@ import { Box, Text } from '../../ink.js';
 import { useAppState } from '../../state/AppState.js';
 import { getEffortSuffix } from '../../utils/effort.js';
 import { truncate } from '../../utils/format.js';
-import { isFullscreenEnvEnabled } from '../../utils/fullscreen.js';
 import { formatModelAndBilling, getLogoDisplayData, truncatePath } from '../../utils/logoV2Utils.js';
 import { renderModelSetting } from '../../utils/model/model.js';
 import { OffscreenFreeze } from '../OffscreenFreeze.js';
-import { AnimatedClawd } from './AnimatedClawd.js';
-import { Clawd } from './Clawd.js';
+import { AprilWordmark } from './AprilWordmark.js';
 import { GuestPassesUpsell, incrementGuestPassesSeenCount, useShowGuestPassesUpsell } from './GuestPassesUpsell.js';
 import { incrementOverageCreditUpsellSeenCount, OverageCreditUpsell, useShowOverageCreditUpsell } from './OverageCreditUpsell.js';
 export function CondensedLogo() {
@@ -69,7 +67,7 @@ export function CondensedLogo() {
     t3 = $[6];
   }
   useEffect(t2, t3);
-  const textWidth = Math.max(columns - 15, 20);
+  const textWidth = Math.max(columns - 22, 20);
   const truncatedVersion = truncate(version, Math.max(textWidth - 13, 6));
   const effortSuffix = getEffortSuffix(model, effortValue);
   const {
@@ -81,7 +79,7 @@ export function CondensedLogo() {
   const truncatedCwd = truncatePath(cwd, Math.max(cwdAvailableWidth, 10));
   let t4;
   if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
-    t4 = isFullscreenEnvEnabled() ? <AnimatedClawd /> : <Clawd />;
+    t4 = <AprilWordmark compact={true} />;
     $[7] = t4;
   } else {
     t4 = $[7];

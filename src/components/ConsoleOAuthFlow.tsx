@@ -1,4 +1,5 @@
 import React from 'react'
+import { getUiText } from '../i18n/ui.js'
 import { Box, Text } from '../ink.js'
 import { useKeybindings } from '../keybindings/useKeybinding.js'
 
@@ -29,12 +30,12 @@ export function ConsoleOAuthFlow({
     <Box flexDirection="column" gap={1}>
       <Text color="warning">
         {mode === 'setup-token'
-          ? 'OAuth token setup has been removed from April Code.'
-          : 'OAuth login has been removed from April Code.'}
+          ? getUiText('oauthSetupTokenRemoved')
+          : getUiText('oauthRemovedShort')}
       </Text>
       {startingMessage ? <Text dimColor>{startingMessage}</Text> : null}
-      <Text>Use /login to configure API key, base URL, and model instead.</Text>
-      <Text dimColor>Press Enter or Esc to continue.</Text>
+      <Text>{getUiText('oauthRemovedConfigureInstead')}</Text>
+      <Text dimColor>{getUiText('pressEnterOrEscToContinue')}</Text>
     </Box>
   )
 }

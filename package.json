@@ -1,6 +1,6 @@
 {
   "name": "@april-ai/april-code",
-  "version": "2.1.88",
+  "version": "1.0.0",
   "bin": {
     "april": "dist/cli.js"
   },

@@ -12,6 +12,10 @@
   "license": "SEE LICENSE IN README.md",
   "description": "Use April Code from your terminal. April Code can understand your codebase, edit files, run terminal commands, and handle full coding workflows.",
   "homepage": "https://github.com/muyuzier-afk/AprilCode",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muyuzier-afk/AprilCode"
+  },
   "bugs": {
     "url": "https://github.com/muyuzier-afk/AprilCode/issues"
   },
